@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OurRadioFS — the community VHF radio for MSFS and X-Plane</title>
+<meta name="description" content="A free virtual VHF radio for Microsoft Flight Simulator and X-Plane. Tune a COM frequency and talk to the pilots flying around you, with real radio range. No accounts, no tracking. Works with MSFS 2020/2024 and X-Plane 11/12.">
+<meta property="og:title" content="OurRadioFS — community VHF radio for MSFS and X-Plane">
+<meta property="og:description" content="Tune a frequency, talk to the pilots around you, with real VHF range. MSFS and X-Plane, free for everyone.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/favicon.ico">
+<style>
+  :root{
+    --bg:#0D1117; --surface:#161B22; --surface2:#0D1117; --border:#30363D;
+    --text:#C9D1D9; --title:#E6EDF3; --muted:#6E7681; --amber:#E8A33D;
+    --red:#F85149; --green:#3FB950;
+    --mono:'Consolas','SF Mono','Roboto Mono',ui-monospace,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--text);font-family:var(--sans);
+       line-height:1.6;-webkit-font-smoothing:antialiased;
+       background:
+         radial-gradient(1100px 620px at 82% -8%, rgba(232,163,61,.13), transparent 58%),
+         radial-gradient(900px 520px at 6% 2%, rgba(88,140,210,.07), transparent 55%),
+         var(--bg);
+       background-attachment:fixed}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{color:var(--title);font-weight:600;line-height:1.2;margin:0}
+  h2{font-size:28px;margin-bottom:12px}
+  p{margin:0 0 16px}
+  .muted{color:var(--muted)}
+  .amber{color:var(--amber)}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);
+         backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;height:60px;gap:12px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--title);font-size:17px}
+  .brand img{width:28px;height:28px}
+  .nav .links{margin-left:auto;display:flex;gap:26px;align-items:center}
+  .nav .links a{color:var(--text);font-size:14px}
+  .nav .links a:hover{color:var(--title)}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;
+       padding:9px 16px;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:.15s}
+  .btn-primary{background:var(--amber);color:#1a1205;border-color:var(--amber);
+       box-shadow:0 6px 22px rgba(232,163,61,.28)}
+  .btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);
+       box-shadow:0 10px 28px rgba(232,163,61,.36)}
+  .btn-ghost:hover{background:var(--surface);border-color:#484f58;transform:translateY(-1px)}
+  @media(max-width:720px){.nav .links a:not(.btn){display:none}}
+
+  /* Hero */
+  .hero{padding:72px 0 40px;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+  .hero h1{font-size:44px;letter-spacing:-.5px}
+  .hero .lead{font-size:18px;color:var(--text);margin:18px 0 26px;max-width:32ch}
+  .hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .tag{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--amber);
+       border:1px solid rgba(232,163,61,.35);border-radius:999px;padding:4px 12px;margin-bottom:20px}
+  @media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:48px}.hero h1{font-size:34px}}
+
+  /* Live counter */
+  .live{margin-top:30px;display:inline-flex;align-items:center;gap:12px;
+        background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;
+        transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+  .live:hover{border-color:rgba(232,163,61,.45);box-shadow:0 10px 26px rgba(0,0,0,.35);transform:translateY(-1px)}
+  .live .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:none}
+  .live.offline .dot{background:var(--amber);box-shadow:0 0 8px rgba(232,163,61,.6)}
+  .live b{color:var(--title);font-family:var(--mono);font-size:20px}
+  .live .lbl{font-size:13px;color:var(--muted)}
+  .live .sep{color:var(--border);margin:0 4px}
+  .live .arr{color:var(--amber);display:inline-block;transition:transform .16s ease}
+  .live:hover .arr{transform:translateX(4px)}
+  /* Alterna números (online) y llamada al mapa (offline) sin dejar huecos vacíos */
+  .live .online{display:none}
+  .live.offline .online{display:none}
+  .live:not(.offline) .online{display:inline}
+  .live .offcta{display:inline;font-size:14px;color:var(--text);font-weight:500}
+  .live:not(.offline) .offcta{display:none}
+
+  /* Radio mock */
+  .radio{background:linear-gradient(#12161d,#0c1015);border:1px solid var(--border);
+         border-radius:16px;padding:0;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);max-width:380px;margin:0 auto;width:100%}
+  .radio .rhead{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--border);background:#11151c}
+  .radio .rhead img{width:22px;height:22px}
+  .radio .rhead b{color:var(--title);font-size:13px;font-weight:700}
+  .radio .rhead .dots{margin-left:auto;display:flex;gap:6px}
+  .radio .rhead .dots i{width:9px;height:9px;border-radius:50%;background:#30363D;display:block}
+  .lcd{margin:14px;background:#0a0d0a;border:1px solid #1c2620;border-radius:10px;padding:14px 16px;
+       font-family:var(--mono)}
+  .ind{display:flex;justify-content:space-between;font-size:11px;letter-spacing:1px;margin-bottom:12px}
+  .ind .l span{color:#3a4149;margin-right:10px}
+  .ind .l .on-tx{color:var(--red)} .ind .r .on{color:var(--green)}
+  .ind .r span{color:#3a4149;margin-left:10px}
+  .freqrow{display:flex;align-items:center;gap:14px;padding:3px 0}
+  .freqrow .k{color:#9A7B3D;font-size:12px;width:38px;letter-spacing:1px}
+  .freqrow .v{color:var(--amber);font-size:30px;letter-spacing:1px;text-shadow:0 0 12px rgba(232,163,61,.35)}
+  .freqrow.dim .v{color:#6E7681;text-shadow:none}
+  .rsep{height:1px;background:#1c2620;margin:8px 0}
+  .plist{margin:0 14px 6px}
+  .plabel{font-size:9px;letter-spacing:1px;color:var(--muted);font-weight:700;margin:6px 0 8px}
+  .peer{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #191d24}
+  .peer:first-of-type{border-top:0}
+  .peer .cs{font-family:var(--mono);color:var(--title);font-size:13px}
+  .peer .ac{font-size:11px;color:var(--muted)}
+  .peer .meta{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
+  .peer.talk .cs{color:var(--amber)}
+  .rfoot{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border);background:#0b0e13}
+  .rfoot .s{font-size:11px;color:var(--muted)}
+  .rfoot .k{font-size:11px;color:var(--muted);font-family:var(--mono)}
+
+  /* Sections */
+  section{padding:56px 0;border-top:1px solid var(--border)}
+  .center{text-align:center;max-width:640px;margin:0 auto 40px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.02),transparent),var(--surface);
+        border:1px solid var(--border);border-radius:12px;padding:22px;
+        transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+  .card:hover{transform:translateY(-3px);border-color:rgba(232,163,61,.4);
+        box-shadow:0 14px 34px rgba(0,0,0,.4)}
+  .card h3{font-size:17px;margin-bottom:8px}
+  .card p{font-size:14px;color:var(--muted);margin:0}
+  .card .ico{color:var(--amber);border:1px solid rgba(232,163,61,.3);
+             background:rgba(232,163,61,.06);
+             border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .card .ico svg{width:22px;height:22px}
+  .card:hover .ico{border-color:rgba(232,163,61,.55);background:rgba(232,163,61,.1)}
+  .new{font-size:10px;font-weight:700;color:#1a1205;background:var(--amber);border-radius:5px;padding:1px 6px;margin-left:8px;vertical-align:2px}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .step .n{font-family:var(--mono);font-size:17px;color:var(--amber);margin-bottom:14px;
+       width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+       border:1px solid rgba(232,163,61,.4);background:rgba(232,163,61,.08)}
+  .step h3{font-size:16px;margin-bottom:6px}
+  .step p{font-size:14px;color:var(--muted);margin:0}
+  @media(max-width:720px){.steps{grid-template-columns:1fr}}
+
+  .cta-band{background:radial-gradient(620px 320px at 50% 0%,rgba(232,163,61,.11),transparent 65%),var(--surface);
+            border:1px solid var(--border);border-radius:16px;
+            padding:42px 36px;text-align:center}
+
+  footer{border-top:1px solid var(--border);padding:34px 0;color:var(--muted);font-size:13px}
+  .fnav{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px}
+  .fnav a:hover{color:var(--title)}
+  .disc{font-size:12px;max-width:70ch}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top"><img src="assets/logo.png" alt="">OurRadioFS</a>
+    <nav class="links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="map.html">Live map</a>
+      <a class="btn btn-primary" href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download</a>
+    </nav>
+  </div>
+</header>
+
+<a id="top"></a>
+<div class="wrap hero">
+  <div>
+    <span class="tag">MSFS &amp; X-Plane · free</span>
+    <h1>Talk to the pilots flying around you.</h1>
+    <p class="lead">OurRadioFS is a virtual VHF radio for Microsoft Flight Simulator and X-Plane. Tune a COM frequency and speak to whoever is on it and in range — real radio distance, real fade-out, one shared sky. MSFS and X-Plane pilots share the same frequencies.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download free</a>
+      <a class="btn btn-ghost" href="map.html">See the live map</a>
+    </div>
+    <a id="live-counter" class="live offline" href="map.html" title="See who's flying right now">
+      <span class="dot"></span>
+      <span class="online">
+        <b id="lc-pilots">0</b> <span class="lbl">pilots</span>
+        <span class="sep">·</span>
+        <b id="lc-freqs">0</b> <span class="lbl">frequencies now</span>
+      </span>
+      <span class="offcta">See who's flying on the live map <span class="arr">&#8594;</span></span>
+    </a>
+  </div>
+
+  <div class="radio" aria-hidden="true">
+    <div class="rhead"><img src="assets/logo.png" alt=""><b>OurRadioFS</b>
+      <span class="dots"><i></i><i></i></span></div>
+    <div class="lcd">
+      <div class="ind">
+        <div class="l"><span class="on-tx">TX</span><span>RX</span></div>
+        <div class="r"><span class="on">SIM</span><span class="on">NET</span></div>
+      </div>
+      <div class="freqrow"><span class="k">COM</span><span class="v">118.325</span></div>
+      <div class="rsep"></div>
+      <div class="freqrow"><span class="k">NAV</span><span class="v">113.70</span></div>
+    </div>
+    <div class="plist">
+      <div class="plabel">ON FREQUENCY</div>
+      <div class="peer talk"><div><div class="cs">IBE3271</div><div class="ac">A320</div></div><div class="meta">12 km · 34,000 ft</div></div>
+      <div class="peer"><div><div class="cs">EC-MFA</div><div class="ac">C172</div></div><div class="meta">7 km · 3,200 ft</div></div>
+      <div class="peer"><div><div class="cs">RYR418</div><div class="ac">B738</div></div><div class="meta">28 km · 21,500 ft</div></div>
+    </div>
+    <div class="rfoot"><span class="s">Settings</span><span class="k">v1.5.0</span></div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="center">
+    <h2>A real radio, not a chat room</h2>
+    <p class="muted">Everything is driven by your sim: your frequency, your position, your altitude. You only hear the people you would actually reach.</p>
+  </div>
+  <div class="wrap" style="padding:0">
+  <div class="grid">
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M7.76 16.24a6 6 0 0 1 0-8.48M16.24 7.76a6 6 0 0 1 0 8.48M4.93 19.07a10 10 0 0 1 0-14.14M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></div><h3>Real VHF range</h3><p>Who you hear depends on distance and altitude, computed live — just like a real radio. Fly higher, reach further.</p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div><h3>Tune &amp; talk</h3><p>Set your COM1 frequency in the sim, hold your push-to-talk key, and you're on the air with everyone on that frequency.</p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l2.5-7 4 14 2.5-9 1.8 2h6.2"/></svg></div><h3>Radio static</h3><p>Voices crackle and fade as pilots drift to the edge of range, so the airwaves feel alive instead of pin-sharp.</p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.93 16.07a10 10 0 0 1 0-8.14M7.76 13.9a6 6 0 0 1 0-3.8M16.24 10.1a6 6 0 0 1 0 3.8M19.07 7.93a10 10 0 0 1 0 8.14"/><circle cx="12" cy="12" r="1.5"/><path d="M12 13.5V22M9 22h6"/></svg></div><h3>NAV1 Morse ident <span class="new">1.3</span></h3><p>Hear the VOR/ILS identifier loud and clear over the engines, with a blinking Morse light on the display.</p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 3 3v15l6 3 6-3 6 3V6l-6-3-6 3Z"/><path d="M9 6v15M15 3v15"/></svg></div><h3>Live map <span class="new">1.5</span></h3><p>Optional and off by default: switch it on to share your position, and see who's flying and on which frequency. Find someone to fly with, then tune in. <a href="map.html" class="amber">Open the map →</a></p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><h3>In-cockpit panel</h3><p>Optional MSFS toolbar panel: see who's on your frequency, nearby active frequencies, and mute anyone without leaving the cockpit.</p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Privacy first</h3><p>No accounts, no email, no tracking. Voice is relayed live and never recorded. Your position is only used to compute range — unless you opt in to the map.</p></div>
+  </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="center"><h2>Up and running in a minute</h2></div>
+  <div class="wrap" style="padding:0">
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Download &amp; install</h3><p>Grab the free installer from flightsim.to and run it. No account to create.</p></div>
+    <div class="step"><div class="n">2</div><h3>Set callsign &amp; PTT</h3><p>Pick your callsign and a push-to-talk key. That's the whole setup.</p></div>
+    <div class="step"><div class="n">3</div><h3>Fly &amp; say hello</h3><p>Tune a COM frequency in the sim and talk to whoever's on it in range.</p></div>
+  </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap" style="padding:0">
+  <div class="cta-band">
+    <h2>Free, and kept alive by pilots</h2>
+    <p class="muted" style="max-width:52ch;margin:0 auto 22px">OurRadioFS is built by a single developer and runs on a server that costs real money. If it makes your flights better, you can help keep it on the air.</p>
+    <div class="cta" style="justify-content:center">
+      <a class="btn btn-primary" href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download free</a>
+      <a class="btn btn-ghost" href="https://ko-fi.com/ourradiofs" target="_blank" rel="noopener">Support on Ko-fi</a>
+    </div>
+  </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fnav">
+      <a href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download</a>
+      <a href="map.html">Live map</a>
+      <a href="https://ko-fi.com/ourradiofs" target="_blank" rel="noopener">Ko-fi</a>
+      <a href="#features">Features</a>
+    </div>
+    <p class="disc">OurRadioFS is a fan-made tool for flight simulation. It is not affiliated with, endorsed by, or associated with Microsoft, Asobo Studio, Laminar Research, or Discord. Microsoft Flight Simulator is a trademark of Microsoft Corporation; X-Plane is a trademark of Laminar Research.</p>
+    <p style="margin:10px 0 0">© 2026 OurRadioFS</p>
+  </div>
+</footer>
+
+<script>
+  // Live "pilots online" counter. Fetches status.json (served from the VPS in phase 2);
+  // stays in a neutral "offline" look until that endpoint exists, so the page is valid today.
+  async function loadStatus(){
+    var el=document.getElementById('live-counter');
+    try{
+      var r=await fetch('status.json',{cache:'no-store'});
+      if(!r.ok) throw 0;
+      var d=await r.json();
+      document.getElementById('lc-pilots').textContent=d.pilots;
+      document.getElementById('lc-freqs').textContent=d.frequencies;
+      el.classList.remove('offline');
+      el.title='Pilots connected right now';
+    }catch(e){
+      el.classList.add('offline');
+      el.title='Live count coming soon';
+    }
+  }
+  loadStatus(); setInterval(loadStatus,15000);
+</script>
+</body>
+</html>
