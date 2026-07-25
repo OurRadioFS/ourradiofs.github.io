@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OurRadioFS — live pilot map</title>
+<meta name="description" content="Live map of OurRadioFS pilots who chose to share their position. Tune their frequency and say hello.">
+<link rel="icon" href="assets/favicon.ico">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --bg:#0D1117; --surface:#161B22; --border:#30363D;
+    --text:#C9D1D9; --title:#E6EDF3; --muted:#6E7681; --amber:#E8A33D;
+    --red:#F85149; --green:#3FB950;
+    --mono:'Consolas','SF Mono','Roboto Mono',ui-monospace,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+       -webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+  a{color:inherit;text-decoration:none}
+
+  /* Header (matches the landing) */
+  header{display:flex;align-items:center;height:56px;gap:12px;padding:0 18px;
+         background:rgba(13,17,23,.9);border-bottom:1px solid var(--border);z-index:1200}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--title);font-size:16px}
+  .brand img{width:26px;height:26px}
+  header .links{margin-left:auto;display:flex;gap:20px;align-items:center;font-size:14px}
+  header .links a{color:var(--text)}
+  header .links a:hover{color:var(--title)}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;
+       padding:8px 15px;border-radius:8px;border:1px solid var(--border);cursor:pointer}
+  .btn-primary{background:var(--amber);color:#1a1205;border-color:var(--amber)}
+  @media(max-width:720px){header .links a:not(.btn){display:none}}
+
+  /* Layout */
+  .main{flex:1;display:flex;min-height:0}
+  #map{flex:1;background:#0a0d12}
+  aside{width:310px;border-left:1px solid var(--border);background:var(--surface);
+        display:flex;flex-direction:column;min-height:0}
+  @media(max-width:760px){aside{display:none}}
+
+  .apanel{padding:14px 16px;border-bottom:1px solid var(--border)}
+  .count{display:flex;align-items:center;gap:10px}
+  .count .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .count.empty .dot{background:var(--muted);box-shadow:none}
+  .count b{color:var(--title);font-family:var(--mono);font-size:20px}
+  .count .lbl{font-size:13px;color:var(--muted)}
+  .note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+  .list{overflow-y:auto;flex:1}
+  .row{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid #191d24;cursor:pointer}
+  .row:hover{background:#1b212b}
+  .row .glyph{color:var(--amber);font-size:15px;flex:none;transform-origin:center}
+  .row .cs{font-family:var(--mono);color:var(--title);font-size:13px;line-height:1.25}
+  .row .ac{font-size:11px;color:var(--muted)}
+  .row .freq{margin-left:auto;text-align:right;flex:none}
+  .row .freq .f{font-family:var(--mono);color:var(--amber);font-size:14px}
+  .row .freq .alt{font-family:var(--mono);color:var(--muted);font-size:10px}
+  .empty-msg{padding:26px 16px;color:var(--muted);font-size:13px;text-align:center;line-height:1.6}
+
+  /* Aircraft marker */
+  .plane{color:var(--amber);filter:drop-shadow(0 0 5px rgba(232,163,61,.55));transform-origin:center}
+  .plane svg{display:block}
+  .tag{font-family:var(--mono);font-size:10px;color:var(--title);background:rgba(13,17,23,.82);
+       border:1px solid var(--border);border-radius:5px;padding:1px 5px;white-space:nowrap;
+       transform:translate(-50%,4px);position:absolute;left:50%}
+
+  /* Leaflet dark tweaks */
+  .leaflet-container{background:#0a0d12}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surface);color:var(--text);
+       border:1px solid var(--border);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .leaflet-popup-content{margin:11px 14px;font-family:var(--sans);font-size:13px}
+  .pop .cs{font-family:var(--mono);color:var(--title);font-size:15px;font-weight:700}
+  .pop .r{color:var(--muted);font-size:12px;margin-top:3px}
+  .pop .r b{color:var(--amber);font-family:var(--mono)}
+  .leaflet-bar a{background:var(--surface);color:var(--text);border-color:var(--border)}
+  .leaflet-bar a:hover{background:#1b212b}
+  .leaflet-control-attribution{background:rgba(13,17,23,.7)!important;color:var(--muted)!important}
+  .leaflet-control-attribution a{color:var(--muted)!important}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="index.html"><img src="assets/logo.png" alt="">OurRadioFS</a>
+  <nav class="links">
+    <a href="index.html">Home</a>
+    <a class="btn btn-primary" href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download</a>
+  </nav>
+</header>
+
+<div class="main">
+  <div id="map"></div>
+  <aside>
+    <div class="apanel">
+      <div id="count" class="count empty">
+        <span class="dot"></span>
+        <span><b id="count-n">—</b> <span class="lbl">pilots sharing now</span></span>
+      </div>
+      <div class="note">Only pilots who turned on <b>“Show me on the map”</b> in the app appear here.
+        Tune their frequency and say hello.</div>
+    </div>
+    <div id="list" class="list"></div>
+  </aside>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  // ── Map ────────────────────────────────────────────────────────────
+  var map = L.map('map', { worldCopyJump:true, zoomControl:true, attributionControl:true })
+              .setView([46.5, 8.0], 5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains:'abcd', maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
+  }).addTo(map);
+
+  // Aircraft glyph (top-down), rotated to the heading.
+  var PLANE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">'+
+    '<path d="M12 2c-.6 0-1 .9-1 2v5.2L3 14v2l8-2.3V19l-2 1.2V22l3-.9 3 .9v-1.8L13 19v-5.3l8 2.3v-2l-8-4.8V4c0-1.1-.4-2-1-2z"/></svg>';
+
+  function planeIcon(cs, heading){
+    return L.divIcon({
+      className:'', iconSize:[26,26], iconAnchor:[13,13],
+      html:'<div class="plane" style="transform:rotate('+(heading||0)+'deg)">'+PLANE+'</div>'+
+           '<div class="tag">'+cs+'</div>'
+    });
+  }
+  function popupHtml(p){
+    return '<div class="pop"><div class="cs">'+esc(p.callsign)+'</div>'+
+      '<div class="r">'+esc(p.aircraft||'—')+'</div>'+
+      '<div class="r">Frequency <b>'+fmtFreq(p.freq)+'</b></div>'+
+      '<div class="r">'+ (p.alt!=null? fmtAlt(p.alt)+' ft':'') +'</div></div>';
+  }
+  function esc(s){return (s==null?'':String(s)).replace(/[<&>]/g,function(c){return {'<':'&lt;','&':'&amp;','>':'&gt;'}[c];});}
+  function fmtFreq(f){ return (f==null||f<=0)?'—':Number(f).toFixed(3); }
+  function fmtAlt(a){ return Math.round(a).toLocaleString('en-US'); }
+
+  var markers = {}; // callsign -> marker
+
+  function render(pilots){
+    // Counter
+    var c=document.getElementById('count'), n=document.getElementById('count-n');
+    n.textContent = pilots.length;
+    c.classList.toggle('empty', pilots.length===0);
+
+    // Side list
+    var list=document.getElementById('list');
+    if(!pilots.length){
+      list.innerHTML='<div class="empty-msg">No one is sharing their position right now.<br>'+
+        'Turn on “Show me on the map” in the app to appear here.</div>';
+    } else {
+      list.innerHTML = pilots.slice().sort(function(a,b){return (a.freq||0)-(b.freq||0);})
+        .map(function(p){
+          return '<div class="row" data-cs="'+esc(p.callsign)+'">'+
+            '<span class="glyph" style="transform:rotate('+(p.heading||0)+'deg)">'+PLANE+'</span>'+
+            '<div><div class="cs">'+esc(p.callsign)+'</div><div class="ac">'+esc(p.aircraft||'—')+'</div></div>'+
+            '<div class="freq"><div class="f">'+fmtFreq(p.freq)+'</div>'+
+              '<div class="alt">'+(p.alt!=null?fmtAlt(p.alt)+' ft':'')+'</div></div></div>';
+        }).join('');
+      Array.prototype.forEach.call(list.querySelectorAll('.row'), function(row){
+        row.onclick=function(){
+          var m=markers[row.getAttribute('data-cs')];
+          if(m){ map.setView(m.getLatLng(), Math.max(map.getZoom(),7), {animate:true}); m.openPopup(); }
+        };
+      });
+    }
+
+    // Markers (add/update/remove)
+    var seen={};
+    pilots.forEach(function(p){
+      seen[p.callsign]=1;
+      var m=markers[p.callsign];
+      if(m){ m.setLatLng([p.lat,p.lon]); m.setIcon(planeIcon(p.callsign,p.heading)); m.setPopupContent(popupHtml(p)); }
+      else { m=L.marker([p.lat,p.lon],{icon:planeIcon(p.callsign,p.heading)}).addTo(map).bindPopup(popupHtml(p)); markers[p.callsign]=m; }
+    });
+    Object.keys(markers).forEach(function(cs){ if(!seen[cs]){ map.removeLayer(markers[cs]); delete markers[cs]; }});
+  }
+
+  // ── Data ───────────────────────────────────────────────────────────
+  // Live feed served by the aggregator; only pilots who opted in appear.
+  async function load(){
+    try{
+      var r=await fetch('https://ourradiofs.duckdns.org/map/data',{cache:'no-store'});
+      if(!r.ok) throw 0;
+      var d=await r.json();
+      render(Array.isArray(d)?d:(d.pilots||[]));
+    }catch(e){
+      render([]); // sin conexión con el servidor → mapa vacío (nunca datos falsos)
+    }
+  }
+  load(); setInterval(load, 15000);
+</script>
+</body>
+</html>
