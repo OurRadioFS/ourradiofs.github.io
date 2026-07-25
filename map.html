@@ -181,19 +181,6 @@
     Object.keys(markers).forEach(function(cs){ if(!seen[cs]){ map.removeLayer(markers[cs]); delete markers[cs]; }});
   }
 
-  // ── Data ───────────────────────────────────────────────────────────
-  // Real feed served by the aggregator; only opted-in pilots are included.
-  // Until that endpoint is live, fall back to a small sample so the page
-  // renders and the design can be judged.
-  var SAMPLE = [
-    {callsign:'IBE3271', aircraft:'A320', freq:122.800, lat:41.30, lon:2.08,  alt:34000, heading:65},
-    {callsign:'EC-MFA',  aircraft:'C172', freq:122.800, lat:41.47, lon:2.20,  alt:3200,  heading:210},
-    {callsign:'RYR418',  aircraft:'B738', freq:118.325, lat:45.46, lon:9.19,  alt:21500, heading:305},
-    {callsign:'DLH441',  aircraft:'A21N', freq:124.850, lat:50.03, lon:8.56,  alt:37000, heading:120},
-    {callsign:'G-BXAC',  aircraft:'PA28', freq:118.500, lat:51.15, lon:-0.18, alt:2500,  heading:15},
-    {callsign:'AFR1199', aircraft:'AT76', freq:121.300, lat:48.72, lon:2.38,  alt:8000,  heading:250}
-  ];
-
   async function load(){
     try{
       var r=await fetch('https://ourradiofs.duckdns.org:8787/map/data',{cache:'no-store'});
