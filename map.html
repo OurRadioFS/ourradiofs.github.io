@@ -180,14 +180,16 @@
     Object.keys(markers).forEach(function(cs){ if(!seen[cs]){ map.removeLayer(markers[cs]); delete markers[cs]; }});
   }
 
+  // ── Data ───────────────────────────────────────────────────────────
+  // Live feed served by the aggregator; only pilots who opted in appear.
   async function load(){
     try{
-      var r=await fetch('https://ourradiofs.duckdns.org:8787/map/data',{cache:'no-store'});
+      var r=await fetch('https://ourradiofs.duckdns.org/map/data',{cache:'no-store'});
       if(!r.ok) throw 0;
       var d=await r.json();
       render(Array.isArray(d)?d:(d.pilots||[]));
     }catch(e){
-      render(SAMPLE); // endpoint not live yet → show the sample
+      render([]); // sin conexión con el servidor → mapa vacío (nunca datos falsos)
     }
   }
   load(); setInterval(load, 15000);
