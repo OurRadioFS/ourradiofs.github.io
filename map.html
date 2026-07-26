@@ -102,20 +102,20 @@
   function fmtAlt(a){ return Math.round(a).toLocaleString('en-US'); }
 
   var markers = {}; // callsign -> marker
-  var REFRESH_MS = 10000;
+  var REFRESH_MS = 5000;
 
-  // Desliza el marcador de su posición actual a la nueva a lo largo de ~un ciclo de
-  // refresco, en vez de saltar. Así el avión se mueve fino aunque los datos lleguen a
-  // intervalos (como FlightRadar24). Cero coste de red: es pura interpolación en el cliente.
+  // Desliza el marcador de su posición actual a la nueva a VELOCIDAD CONSTANTE (lineal),
+  // como se mueve un avión de verdad — nada de acelerar/frenar en cada tramo. La duración
+  // es un pelín mayor que el ciclo de refresco para que el avión siga en movimiento cuando
+  // llega el siguiente dato (sin micro-pausas). Pura interpolación en el cliente, cero red.
   function glide(m, to){
     var from = m.getLatLng();
     if (Math.abs(from.lat-to[0]) < 1e-6 && Math.abs(from.lng-to[1]) < 1e-6) return;
     if (m._raf) cancelAnimationFrame(m._raf);
-    var start = performance.now(), dur = REFRESH_MS;
+    var start = performance.now(), dur = REFRESH_MS * 1.25;
     function step(now){
-      var t = Math.min(1, (now-start)/dur);
-      var e = t*(2-t); // ease-out, movimiento natural
-      m.setLatLng([from.lat + (to[0]-from.lat)*e, from.lng + (to[1]-from.lng)*e]);
+      var t = Math.min(1, (now-start)/dur);   // lineal = velocidad constante
+      m.setLatLng([from.lat + (to[0]-from.lat)*t, from.lng + (to[1]-from.lng)*t]);
       if (t < 1) m._raf = requestAnimationFrame(step);
     }
     m._raf = requestAnimationFrame(step);
@@ -141,11 +141,4 @@
       var d=await r.json();
       render(Array.isArray(d)?d:(d.pilots||[]));
     }catch(e){
-      render([]); // sin conexión con el servidor → mapa vacío (nunca datos falsos)
-    }
-  }
-  load(); setInterval(load, REFRESH_MS);
-</script>
-</body>
-</html>
-
+      render([]); // sin conexión con el servidor → mapa vacío (nunca datos 
