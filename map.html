@@ -141,4 +141,10 @@
       var d=await r.json();
       render(Array.isArray(d)?d:(d.pilots||[]));
     }catch(e){
-      render([]); // sin conexión con el servidor → mapa vacío (nunca datos 
+      render([]); // sin conexión con el servidor → mapa vacío (nunca datos falsos)
+    }
+  }
+  load(); setInterval(load, REFRESH_MS);
+</script>
+</body>
+</html>
