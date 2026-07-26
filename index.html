@@ -45,7 +45,7 @@
   .nav .links a:hover{color:var(--title)}
   .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;
        padding:9px 16px;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:.15s}
-  .btn-primary{background:var(--amber);color:#1a1205;border-color:var(--amber);
+  .btn-primary{background:var(--amber);color:#1a1205 !important;border-color:var(--amber);
        box-shadow:0 6px 22px rgba(232,163,61,.28)}
   .btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);
        box-shadow:0 10px 28px rgba(232,163,61,.36)}
@@ -164,7 +164,7 @@
 <a id="top"></a>
 <div class="wrap hero">
   <div>
-    <span class="tag">MSFS 20/24 &amp; X-Plane 11/12</span>
+    <span class="tag">MSFS 20/24 & X-Plane 11/12</span>
     <h1>Talk to the pilots flying around you.</h1>
     <p class="lead">OurRadioFS is a virtual VHF radio for Microsoft Flight Simulator and X-Plane. Tune a COM frequency and speak to whoever is on it and in range — real radio distance, real fade-out, one shared sky. MSFS and X-Plane pilots share the same frequencies.</p>
     <div class="cta">
@@ -182,28 +182,8 @@
     </a>
   </div>
 
-  <div class="radio" aria-hidden="true">
-    <div class="rhead"><img src="assets/logo.png" alt=""><b>OurRadioFS</b>
-      <span class="dots"><i></i><i></i></span></div>
-    <div class="lcd">
-      <div class="ind">
-        <div class="l"><span class="on-tx">TX</span><span>RX</span></div>
-        <div class="r"><span class="on">SIM</span><span class="on">NET</span></div>
-      </div>
-      <div class="freqrow"><span class="k">COM</span><span class="v">118.325</span></div>
-      <div class="rsep"></div>
-      <div class="freqrow"><span class="k">NAV</span><span class="v">113.70</span></div>
-    </div>
-    <div class="plist">
-      <div class="plabel">ON FREQUENCY</div>
-      <div class="peer talk"><div><div class="cs">IBE3271</div><div class="ac">A320</div></div><div class="meta">12 km · 34,000 ft</div></div>
-      <div class="peer"><div><div class="cs">EC-MFA</div><div class="ac">C172</div></div><div class="meta">7 km · 3,200 ft</div></div>
-      <div class="peer"><div><div class="cs">RYR418</div><div class="ac">B738</div></div><div class="meta">28 km · 21,500 ft</div></div>
-    </div>
-    <div class="rfoot"><span class="s">Settings</span><span class="k">v1.5.0</span></div>
-  </div>
+  <img src="assets/ORFS6.png" alt="Interfaz de OurRadioFS" style="max-width:320px; width:80%; margin:0 auto; display:block; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.5); border:1px solid var(--border);">
 </div>
-
 <section id="features">
   <div class="center">
     <h2>A real radio, not a chat room</h2>
