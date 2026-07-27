@@ -1,36 +1,14 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-
   <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OurRadioFS — Live Pilot Map</title>
-
-  <meta
-    name="description"
-    content="Live map of OurRadioFS pilots who chose to share their position."
-  >
-
-  <link
-    rel="icon"
-    href="assets/favicon.ico"
-  >
-
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
-  >
-
+  <meta name="description" content="Live map of OurRadioFS pilots who chose to share their position.">
+  <link rel="icon" href="assets/favicon.ico">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <style>
-
     :root {
-
       --bg: #0D1117;
       --surface: #161B22;
       --border: #30363D;
@@ -38,2162 +16,477 @@
       --title: #E6EDF3;
       --muted: #6E7681;
       --amber: #E8A33D;
-
-      --mono:
-        'Consolas',
-        'SF Mono',
-        'Roboto Mono',
-        ui-monospace,
-        monospace;
-
-      --sans:
-        -apple-system,
-        BlinkMacSystemFont,
-        'Segoe UI',
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
+      --mono: 'Consolas', 'SF Mono', 'Roboto Mono', ui-monospace, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
-
-    * {
-      box-sizing: border-box;
-    }
-
-
-    html,
-    body {
-      height: 100%;
-    }
-
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
 
     body {
-
       margin: 0;
-
       background: var(--bg);
-
       color: var(--text);
-
       font-family: var(--sans);
-
       -webkit-font-smoothing: antialiased;
-
       display: flex;
-
       flex-direction: column;
-
     }
 
+    a { color: inherit; text-decoration: none; }
 
-    a {
-
-      color: inherit;
-
-      text-decoration: none;
-
-    }
-
-
-    /* ─────────────────────────────
-       HEADER
-    ───────────────────────────── */
-
+    /* HEADER */
     header {
-
       display: flex;
-
       align-items: center;
-
       height: 56px;
-
       gap: 12px;
-
       padding: 0 18px;
-
-      background: rgba(
-        13,
-        17,
-        23,
-        0.9
-      );
-
+      background: rgba(13, 17, 23, 0.9);
       border-bottom: 1px solid var(--border);
-
       z-index: 1200;
-
     }
-
 
     .brand {
-
       display: flex;
-
       align-items: center;
-
       gap: 9px;
-
       font-size: 16px;
-
       font-weight: 700;
-
       color: var(--title);
-
     }
 
-
-    .brand img {
-
-      width: 26px;
-
-      height: 26px;
-
-    }
-
+    .brand img { width: 26px; height: 26px; }
 
     header .links {
-
       margin-left: auto;
-
       display: flex;
-
       align-items: center;
-
       gap: 20px;
-
       font-size: 14px;
-
     }
 
-
-    header .links a {
-
-      color: var(--text);
-
-    }
-
-
-    header .links a:hover {
-
-      color: var(--title);
-
-    }
-
+    header .links a { color: var(--text); }
+    header .links a:hover { color: var(--title); }
 
     .btn {
-
       display: inline-flex;
-
       align-items: center;
-
       gap: 8px;
-
       padding: 8px 15px;
-
       border: 1px solid var(--border);
-
       border-radius: 8px;
-
       font-size: 14px;
-
       font-weight: 600;
-
       cursor: pointer;
-
     }
-
 
     .btn-primary {
-
       background: var(--amber);
-
       color: #1a1205 !important;
-
       border-color: var(--amber);
-
     }
 
+    /* MAP */
+    #map { flex: 1; min-height: 0; background: #0a0d12; }
+    .leaflet-container { background: #0a0d12; }
 
-    /* ─────────────────────────────
-       MAP
-    ───────────────────────────── */
-
-    #map {
-
-      flex: 1;
-
-      min-height: 0;
-
-      background: #0a0d12;
-
-    }
-
-
-    .leaflet-container {
-
-      background: #0a0d12;
-
-    }
-
-
-    /* ─────────────────────────────
-       AIRCRAFT MARKER
-    ───────────────────────────── */
-
+    /* AIRCRAFT MARKER */
     .plane-marker {
-
       position: relative;
-
       width: 80px;
-
       height: 42px;
-
       pointer-events: auto;
-
     }
-
 
     .plane-marker .plane {
-
       position: absolute;
-
       left: 27px;
-
       top: 7px;
-
       width: 26px;
-
       height: 26px;
-
       color: var(--amber);
-
-      filter:
-        drop-shadow(
-          0 0 5px
-          rgba(
-            232,
-            163,
-            61,
-            0.55
-          )
-        );
-
+      filter: drop-shadow(0 0 5px rgba(232, 163, 61, 0.55));
       transform-origin: center center;
-
       display: flex;
-
       align-items: center;
-
       justify-content: center;
-
     }
-
 
     .plane-marker .plane svg {
-
       display: block;
-
       width: 26px;
-
       height: 26px;
-
       overflow: visible;
-
     }
-
 
     .plane-marker .tag {
-
       position: absolute;
-
       left: 40px;
-
       top: 31px;
-
       transform: translateX(-50%);
-
       padding: 1px 5px;
-
       color: var(--title);
-
-      background: rgba(
-        13,
-        17,
-        23,
-        0.9
-      );
-
+      background: rgba(13, 17, 23, 0.9);
       border: 1px solid var(--border);
-
       border-radius: 5px;
-
       font-family: var(--mono);
-
       font-size: 10px;
-
       line-height: 14px;
-
       white-space: nowrap;
-
     }
 
-
-    /* ─────────────────────────────
-       LEAFLET
-    ───────────────────────────── */
-
+    /* LEAFLET */
     .leaflet-bar a {
-
       background: var(--surface);
-
       color: var(--text);
-
       border-color: var(--border);
-
     }
 
-
-    .leaflet-bar a:hover {
-
-      background: #1b212b;
-
-    }
-
+    .leaflet-bar a:hover { background: #1b212b; }
 
     .leaflet-control-attribution {
-
-      background: rgba(
-        13,
-        17,
-        23,
-        0.7
-      ) !important;
-
+      background: rgba(13, 17, 23, 0.7) !important;
       color: var(--muted) !important;
-
     }
 
+    .leaflet-control-attribution a { color: var(--muted) !important; }
 
-    .leaflet-control-attribution a {
-
-      color: var(--muted) !important;
-
-    }
-
-
-    /* ─────────────────────────────
-       COMPACT POPUP
-    ───────────────────────────── */
-
+    /* COMPACT POPUP */
     .leaflet-popup-content-wrapper {
-
       padding: 0 !important;
-
       border-radius: 10px !important;
-
       overflow: hidden;
-
       background: transparent !important;
-
       border: 1px solid var(--border);
-
-      box-shadow:
-        0 10px 25px
-        rgba(
-          0,
-          0,
-          0,
-          0.8
-        ) !important;
-
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8) !important;
     }
 
-
-    .leaflet-popup-tip {
-
-      background: var(--bg) !important;
-
-    }
-
+    .leaflet-popup-tip { background: var(--bg) !important; }
 
     .leaflet-popup-content {
-
       margin: 0 !important;
-
       width: max-content !important;
-
       min-width: 180px;
-
     }
-
 
     .flight-popup {
-
       background: var(--surface);
-
       color: var(--text);
-
       font-family: var(--sans);
-
     }
-
 
     .flight-popup-header {
-
       display: flex;
-
       align-items: center;
-
       padding: 9px 12px;
-
-      background: rgba(
-        255,
-        255,
-        255,
-        0.03
-      );
-
+      background: rgba(255, 255, 255, 0.03);
       border-bottom: 1px solid var(--border);
-
     }
-
 
     .flight-popup-title {
-
       display: flex;
-
       align-items: baseline;
-
       gap: 7px;
-
     }
-
 
     .flight-popup-callsign {
-
       color: var(--title);
-
       font-family: var(--mono);
-
       font-size: 15px;
-
       font-weight: 800;
-
       letter-spacing: 0.4px;
-
     }
-
 
     .flight-popup-aircraft {
-
       color: var(--muted);
-
       font-size: 11px;
-
       font-weight: 600;
-
     }
 
-
-    .flight-popup-body {
-
-      padding: 11px 12px;
-
-    }
-
+    .flight-popup-body { padding: 11px 12px; }
 
     .flight-popup-grid {
-
       display: grid;
-
-      grid-template-columns:
-        repeat(
-          2,
-          minmax(
-            70px,
-            1fr
-          )
-        );
-
+      grid-template-columns: repeat(2, minmax(70px, 1fr));
       gap: 10px 14px;
-
     }
-
 
     .flight-data-item {
-
       display: flex;
-
       flex-direction: column;
-
     }
-
 
     .flight-data-label {
-
       margin-bottom: 1px;
-
       color: var(--muted);
-
       font-size: 9px;
-
       font-weight: 700;
-
       text-transform: uppercase;
-
     }
-
 
     .flight-data-value {
-
       color: var(--title);
-
       font-size: 12px;
-
       font-weight: 600;
-
     }
-
 
     .flight-popup-footer {
-
       display: flex;
-
       align-items: center;
-
       justify-content: space-between;
-
       gap: 10px;
-
       padding: 8px 12px;
-
       background: var(--bg);
-
       border-top: 1px solid var(--border);
-
     }
-
 
     .freq-box {
-
       display: flex;
-
       align-items: center;
-
       gap: 7px;
-
     }
-
 
     .freq-label {
-
       padding: 2px 5px;
-
       background: var(--border);
-
       border-radius: 4px;
-
       color: var(--text);
-
       font-size: 10px;
-
       font-weight: 700;
-
     }
-
 
     .freq-value {
-
       color: var(--amber);
-
       font-family: var(--mono);
-
       font-size: 13px;
-
       font-weight: 700;
-
     }
-
   </style>
-
 </head>
 
-
 <body>
-
-
   <header>
-
-
-    <a
-      class="brand"
-      href="index.html"
-    >
-
-      <img
-        src="assets/logo.png"
-        alt=""
-      >
-
+    <a class="brand" href="index.html">
+      <img src="assets/logo.png" alt="">
       OurRadioFS
-
     </a>
-
-
-    <nav
-      class="links"
-    >
-
-      <a
-        href="index.html"
-      >
-
-        Home
-
-      </a>
-
-
-      <a
-        class="btn btn-primary"
-
-        href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio"
-
-        target="_blank"
-
-        rel="noopener"
-      >
-
-        Download
-
-      </a>
-
+    <nav class="links">
+      <a href="index.html">Home</a>
+      <a class="btn btn-primary"
+         href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio"
+         target="_blank" rel="noopener">Download</a>
     </nav>
-
-
   </header>
 
+  <div id="map"></div>
 
-  <div
-    id="map"
-  ></div>
-
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
-  ></script>
-
-
-  <!-- DICCIONARIO EXTERNO DE AERONAVES -->
-
-  <script
-    src="aircraft-dictionary.js"
-  ></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-
-
-    // ─────────────────────────────────────────────
     // MAP
-    // ─────────────────────────────────────────────
-
-    const map =
-
-      L.map(
-
-        'map',
-
-        {
-
-          worldCopyJump:
-            true,
-
-          zoomControl:
-            true,
-
-          attributionControl:
-            true
-
-        }
-
-      ).setView(
-
-        [
-
-          46.5,
-
-          8.0
-
-        ],
-
-        5
-
-      );
-
-
-    L.tileLayer(
-
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-
-      {
-
-        subdomains:
-          'abcd',
-
-        maxZoom:
-          19,
-
-        attribution:
-
-          '&copy; ' +
-
-          '<a href="https://www.openstreetmap.org/copyright" ' +
-
-          'target="_blank" rel="noopener">' +
-
-          'OpenStreetMap</a> contributors ' +
-
-          '&copy; ' +
-
-          '<a href="https://carto.com/attributions" ' +
-
-          'target="_blank" rel="noopener">' +
-
-          'CARTO</a>'
-
-      }
-
-    ).addTo(
-
-      map
-
-    );
-
-
-    // ─────────────────────────────────────────────
-    // SVG ICONS
-    // ─────────────────────────────────────────────
-
-
-    const AIRLINER_ICON = `
-
-<svg
-  viewBox="0 0 64 64"
-  fill="currentColor"
->
-
-  <path d="
-    M31 3
-    C28 3 26 7 26 12
-    V25
-    L5 37
-    V43
-    L26 37
-    V51
-    L18 57
-    V61
-    L32 57
-    L46 61
-    V57
-    L38 51
-    V37
-    L59 43
-    V37
-    L38 25
-    V12
-    C38 7 35 3 31 3
-    Z
-  "/>
-
-</svg>
-
-`;
-
-
-const GENERAL_AVIATION_ICON = `
-
-<svg
-  viewBox="0 0 64 64"
-  fill="currentColor"
->
-
-  <path d="
-    M32 5
-    C29 5 27 8 27 13
-    V28
-    L14 36
-    L16 41
-    L27 37
-    V50
-    L22 57
-    V60
-    L32 57
-    L42 60
-    V57
-    L37 50
-    V37
-    L48 41
-    L50 36
-    L37 28
-    V13
-    C37 8 35 5 32 5
-    Z
-  "/>
-
-</svg>
-
-`;
-
-
-const BUSINESS_JET_ICON = `
-
-<svg
-  viewBox="0 0 64 64"
-  fill="currentColor"
->
-
-  <path d="
-    M32 5
-    C29 5 27 8 27 13
-    V26
-    L12 35
-    V40
-    L27 36
-    V49
-    L21 57
-    V60
-    L32 56
-    L43 60
-    V57
-    L37 49
-    V36
-    L52 40
-    V35
-    L37 26
-    V13
-    C37 8 35 5 32 5
-    Z
-  "/>
-
-</svg>
-
-`;
-
-
-const HELICOPTER_ICON = `
-
-<svg
-  viewBox="0 0 64 64"
-  fill="currentColor"
->
-
-  <!-- rotor -->
-
-  <rect
-    x="7"
-    y="6"
-    width="50"
-    height="4"
-    rx="2"
-  />
-
-  <rect
-    x="30"
-    y="10"
-    width="4"
-    height="17"
-  />
-
-  <!-- cabin -->
-
-  <path d="
-    M20 27
-    C20 21 25 18 32 18
-    C39 18 44 21 44 27
-    V39
-    H20
-    Z
-  "/>
-
-  <!-- tail -->
-
-  <path d="
-    M42 29
-    L59 22
-    L60 26
-    L44 35
-    Z
-  "/>
-
-  <!-- skids -->
-
-  <rect
-    x="15"
-    y="40"
-    width="34"
-    height="3"
-    rx="1.5"
-  />
-
-  <rect
-    x="20"
-    y="43"
-    width="3"
-    height="8"
-  />
-
-  <rect
-    x="41"
-    y="43"
-    width="3"
-    height="8"
-  />
-
-</svg>
-
-`;
-
-    const AIRCRAFT_ICONS = {
-
-      airliner:
-        AIRLINER_ICON,
-
-      generalAviation:
-        GENERAL_AVIATION_ICON,
-
-      businessJet:
-        BUSINESS_JET_ICON,
-
-      helicopter:
-        HELICOPTER_ICON
-
-    };
-
-
-    // ─────────────────────────────────────────────
-    // AIRCRAFT DETECTION
-    // ─────────────────────────────────────────────
-
-    function getAircraftType(
-
-      aircraft
-
-    ) {
-
-
-      // AVIONETA POR DEFECTO
-
-      if (
-
-        !aircraft
-
-      ) {
-
-        return 'generalAviation';
-
-      }
-
-
-      const code =
-
-        String(
-
-          aircraft
-
-        )
-
-        .toUpperCase()
-
-        .trim();
-
-
-      if (
-
-        typeof AIRCRAFT_DICTIONARY ===
-
-        'undefined'
-
-      ) {
-
-        return 'generalAviation';
-
-      }
-
-
-      for (
-
-        const type
-
-        in
-
-        AIRCRAFT_DICTIONARY
-
-      ) {
-
-
-        const models =
-
-          AIRCRAFT_DICTIONARY[
-
-            type
-
-          ];
-
-
-        if (
-
-          !Array.isArray(
-
-            models
-
-          )
-
-        ) {
-
-          continue;
-
-        }
-
-
-        const found =
-
-          models.some(
-
-            model => {
-
-
-              const modelCode =
-
-                String(
-
-                  model
-
-                )
-
-                .toUpperCase()
-
-                .trim();
-
-
-              return (
-
-                code ===
-
-                modelCode
-
-                ||
-
-                code.startsWith(
-
-                  modelCode
-
-                )
-
-              );
-
-            }
-
-          );
-
-
-        if (
-
-          found
-
-        ) {
-
-          return type;
-
-        }
-
-      }
-
-
-      // MODELO DESCONOCIDO
-
-      // → AVIONETA
-
-      return 'generalAviation';
-
+    const map = L.map('map', {
+      worldCopyJump: true,
+      zoomControl: true,
+      attributionControl: true
+    }).setView([46.5, 8.0], 5);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors ' +
+        '&copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
+    }).addTo(map);
+
+    // AIRCRAFT ICON (single, top-down, points north at 0deg so it rotates with heading)
+    const PLANE_ICON =
+      '<svg viewBox="0 0 24 24" fill="currentColor">' +
+      '<path d="M12 2c-.6 0-1 .9-1 2v5.2L3 14v2l8-2.3V19l-2 1.2V22l3-.9 3 .9v-1.8L13 19v-5.3l8 2.3v-2l-8-4.8V4c0-1.1-.4-2-1-2z"/>' +
+      '</svg>';
+
+    function planeIcon(callsign, heading) {
+      const rotation = Number(heading) || 0;
+      return L.divIcon({
+        className: 'plane-marker',
+        iconSize: [80, 42],
+        iconAnchor: [40, 21],
+        html:
+          '<div class="plane" style="transform:rotate(' + rotation + 'deg)">' +
+          PLANE_ICON +
+          '</div>' +
+          '<div class="tag">' + esc(callsign) + '</div>'
+      });
     }
 
-
-    // ─────────────────────────────────────────────
-    // AIRCRAFT ICON
-    // ─────────────────────────────────────────────
-
-    function planeIcon(
-
-      callsign,
-
-      heading,
-
-      aircraft
-
-    ) {
-
-
-      const rotation =
-
-        Number(
-
-          heading
-
-        )
-
-        ||
-
-        0;
-
-
-      const aircraftType =
-
-        getAircraftType(
-
-          aircraft
-
-        );
-
-
-      const icon =
-
-        AIRCRAFT_ICONS[
-
-          aircraftType
-
-        ]
-
-        ||
-
-        GENERAL_AVIATION_ICON;
-
-
-      return L.divIcon(
-
-        {
-
-          className:
-
-            'plane-marker',
-
-          iconSize:
-
-            [
-
-              80,
-
-              42
-
-            ],
-
-          iconAnchor:
-
-            [
-
-              40,
-
-              21
-
-            ],
-
-          html:
-
-            '<div ' +
-
-            'class="plane" ' +
-
-            'style="transform:rotate(' +
-
-            rotation +
-
-            'deg)">' +
-
-            icon +
-
-            '</div>' +
-
-            '<div class="tag">' +
-
-            esc(
-
-              callsign
-
-            ) +
-
-            '</div>'
-
-        }
-
-      );
-
-    }
-
-
-    // ─────────────────────────────────────────────
     // POPUP
-    // ─────────────────────────────────────────────
+    function popupHtml(pilot) {
+      const aircraft = pilot.aircraft != null ? pilot.aircraft : '—';
 
-    function popupHtml(
+      const altitude = pilot.alt != null ? fmtAlt(pilot.alt) + ' ft' : '—';
 
-      pilot
+      const speed = pilot.speed != null ? Math.round(pilot.speed) + ' kts' : '—';
 
-    ) {
-
-
-      const aircraft =
-
-        pilot.aircraft != null
-
-          ? pilot.aircraft
-
+      const vspeed =
+        pilot.vspeed != null
+          ? (pilot.vspeed >= 0 ? '+' : '') + Math.round(pilot.vspeed) + ' fpm'
           : '—';
-
-
-      const altitude =
-
-        pilot.alt != null
-
-          ? fmtAlt(
-
-              pilot.alt
-
-            )
-
-            + ' ft'
-
-          : '—';
-
-
-      const speed =
-
-        pilot.speed != null
-
-          ? Math.round(
-
-              pilot.speed
-
-            )
-
-            + ' kts'
-
-          : '—';
-
-
-      const distance =
-
-        pilot.dist != null
-
-          ? Number(
-
-              pilot.dist
-
-            ).toFixed(
-
-              1
-
-            )
-
-            + ' km'
-
-
-          : pilot.distance != null
-
-            ? Number(
-
-                pilot.distance
-
-              ).toFixed(
-
-                1
-
-              )
-
-              + ' km'
-
-
-            : '—';
-
 
       const heading =
-
         pilot.heading != null
-
-          ? String(
-
-              Math.round(
-
-                pilot.heading
-
-              )
-
-            ).padStart(
-
-              3,
-
-              '0'
-
-            )
-
-            + '°'
-
+          ? String(Math.round(pilot.heading)).padStart(3, '0') + '°'
           : '—';
 
-
-      const frequency =
-
-        fmtFreq(
-
-          pilot.freq
-
-        );
-
+      const frequency = fmtFreq(pilot.freq);
 
       return `
-
         <div class="flight-popup">
-
-
           <div class="flight-popup-header">
-
-
             <div class="flight-popup-title">
-
-
-              <span class="flight-popup-callsign">
-
-                ${esc(
-
-                  pilot.callsign
-
-                )}
-
-              </span>
-
-
-              <span class="flight-popup-aircraft">
-
-                ${esc(
-
-                  aircraft
-
-                )}
-
-              </span>
-
-
+              <span class="flight-popup-callsign">${esc(pilot.callsign)}</span>
+              <span class="flight-popup-aircraft">${esc(aircraft)}</span>
             </div>
-
-
           </div>
-
-
           <div class="flight-popup-body">
-
-
             <div class="flight-popup-grid">
-
-
               <div class="flight-data-item">
-
-
-                <span class="flight-data-label">
-
-                  Altitude
-
-                </span>
-
-
-                <span class="flight-data-value">
-
-                  ${esc(
-
-                    altitude
-
-                  )}
-
-                </span>
-
-
+                <span class="flight-data-label">Altitude</span>
+                <span class="flight-data-value">${esc(altitude)}</span>
               </div>
-
-
               <div class="flight-data-item">
-
-
-                <span class="flight-data-label">
-
-                  Speed
-
-                </span>
-
-
-                <span class="flight-data-value">
-
-                  ${esc(
-
-                    speed
-
-                  )}
-
-                </span>
-
-
+                <span class="flight-data-label">Speed</span>
+                <span class="flight-data-value">${esc(speed)}</span>
               </div>
-
-
               <div class="flight-data-item">
-
-
-                <span class="flight-data-label">
-
-                  Distance
-
-                </span>
-
-
-                <span class="flight-data-value">
-
-                  ${esc(
-
-                    distance
-
-                  )}
-
-                </span>
-
-
+                <span class="flight-data-label">Vert. speed</span>
+                <span class="flight-data-value">${esc(vspeed)}</span>
               </div>
-
-
               <div class="flight-data-item">
-
-
-                <span class="flight-data-label">
-
-                  Heading
-
-                </span>
-
-
-                <span class="flight-data-value">
-
-                  ${esc(
-
-                    heading
-
-                  )}
-
-                </span>
-
-
+                <span class="flight-data-label">Heading</span>
+                <span class="flight-data-value">${esc(heading)}</span>
               </div>
-
-
             </div>
-
-
           </div>
-
-
           <div class="flight-popup-footer">
-
-
             <div class="freq-box">
-
-
-              <span class="freq-label">
-
-                COM1
-
-              </span>
-
-
-              <span class="freq-value">
-
-                ${esc(
-
-                  frequency
-
-                )}
-
-              </span>
-
-
+              <span class="freq-label">COM1</span>
+              <span class="freq-value">${esc(frequency)}</span>
             </div>
-
-
           </div>
-
-
         </div>
-
       `;
-
     }
 
-
-    // ─────────────────────────────────────────────
     // HELPERS
-    // ─────────────────────────────────────────────
-
-    function esc(
-
-      value
-
-    ) {
-
-
-      return (
-
-        value == null
-
-          ? ''
-
-          : String(
-
-              value
-
-            )
-
-      ).replace(
-
-        /[<&>]/g,
-
-        function(
-
-          character
-
-        ) {
-
-
-          return {
-
-            '<':
-              '&lt;',
-
-            '&':
-              '&amp;',
-
-            '>':
-              '&gt;'
-
-          }[
-
-            character
-
-          ];
-
-        }
-
-      );
-
+    function esc(value) {
+      return (value == null ? '' : String(value)).replace(/[<&>]/g, function (character) {
+        return { '<': '&lt;', '&': '&amp;', '>': '&gt;' }[character];
+      });
     }
 
-
-    function fmtFreq(
-
-      frequency
-
-    ) {
-
-
-      return (
-
-        frequency == null
-
-        ||
-
-        Number(
-
-          frequency
-
-        ) <= 0
-
-      )
-
+    function fmtFreq(frequency) {
+      return (frequency == null || Number(frequency) <= 0)
         ? '—'
-
-        : Number(
-
-            frequency
-
-          ).toFixed(
-
-            3
-
-          );
-
+        : Number(frequency).toFixed(3);
     }
 
-
-    function fmtAlt(
-
-      altitude
-
-    ) {
-
-
-      return Math.round(
-
-        altitude
-
-      ).toLocaleString(
-
-        'en-US'
-
-      );
-
+    function fmtAlt(altitude) {
+      return Math.round(altitude).toLocaleString('en-US');
     }
 
-
-    // ─────────────────────────────────────────────
     // MARKERS
-    // ─────────────────────────────────────────────
-
     const markers = {};
-
-
     const REFRESH_MS = 5000;
 
+    function glide(marker, target) {
+      const from = marker.getLatLng();
 
-    function glide(
-
-      marker,
-
-      target
-
-    ) {
-
-
-      const from =
-
-        marker.getLatLng();
-
-
-      if (
-
-        Math.abs(
-
-          from.lat -
-
-          target[0]
-
-        )
-
-        <
-
-        0.000001
-
-        &&
-
-        Math.abs(
-
-          from.lng -
-
-          target[1]
-
-        )
-
-        <
-
-        0.000001
-
-      ) {
-
+      if (Math.abs(from.lat - target[0]) < 0.000001 &&
+          Math.abs(from.lng - target[1]) < 0.000001) {
         return;
-
       }
 
+      if (marker._raf) { cancelAnimationFrame(marker._raf); }
 
-      if (
+      const start = performance.now();
+      const duration = REFRESH_MS * 1.25;
 
-        marker._raf
+      function step(now) {
+        const t = Math.min(1, (now - start) / duration);
 
-      ) {
+        marker.setLatLng([
+          from.lat + (target[0] - from.lat) * t,
+          from.lng + (target[1] - from.lng) * t
+        ]);
 
-        cancelAnimationFrame(
-
-          marker._raf
-
-        );
-
+        if (t < 1) { marker._raf = requestAnimationFrame(step); }
       }
 
-
-      const start =
-
-        performance.now();
-
-
-      const duration =
-
-        REFRESH_MS * 1.25;
-
-
-      function step(
-
-        now
-
-      ) {
-
-
-        const t =
-
-          Math.min(
-
-            1,
-
-            (
-
-              now -
-
-              start
-
-            )
-
-            /
-
-            duration
-
-          );
-
-
-        marker.setLatLng(
-
-          [
-
-            from.lat +
-
-            (
-
-              target[0] -
-
-              from.lat
-
-            )
-
-            *
-
-            t,
-
-
-            from.lng +
-
-            (
-
-              target[1] -
-
-              from.lng
-
-            )
-
-            *
-
-            t
-
-          ]
-
-        );
-
-
-        if (
-
-          t < 1
-
-        ) {
-
-
-          marker._raf =
-
-            requestAnimationFrame(
-
-              step
-
-            );
-
-        }
-
-      }
-
-
-      marker._raf =
-
-        requestAnimationFrame(
-
-          step
-
-        );
-
+      marker._raf = requestAnimationFrame(step);
     }
 
-
-    function render(
-
-      pilots
-
-    ) {
-
-
+    function render(pilots) {
       const seen = {};
 
-
-      pilots.forEach(
-
-        function(
-
-          pilot
-
-        ) {
-
-
-          if (
-
-            pilot.callsign == null
-
-            ||
-
-            pilot.lat == null
-
-            ||
-
-            pilot.lon == null
-
-          ) {
-
-            return;
-
-          }
-
-
-          const callsign =
-
-            pilot.callsign;
-
-
-          seen[
-
-            callsign
-
-          ] = true;
-
-
-          const marker =
-
-            markers[
-
-              callsign
-
-            ];
-
-
-          if (
-
-            marker
-
-          ) {
-
-
-            glide(
-
-              marker,
-
-              [
-
-                Number(
-
-                  pilot.lat
-
-                ),
-
-                Number(
-
-                  pilot.lon
-
-                )
-
-              ]
-
-            );
-
-
-            marker.setIcon(
-
-              planeIcon(
-
-                callsign,
-
-                pilot.heading,
-
-                pilot.aircraft
-
-              )
-
-            );
-
-
-            marker.setPopupContent(
-
-              popupHtml(
-
-                pilot
-
-              )
-
-            );
-
-          }
-
-
-          else {
-
-
-            const newMarker =
-
-              L.marker(
-
-                [
-
-                  Number(
-
-                    pilot.lat
-
-                  ),
-
-                  Number(
-
-                    pilot.lon
-
-                  )
-
-                ],
-
-                {
-
-                  icon:
-
-                    planeIcon(
-
-                      callsign,
-
-                      pilot.heading,
-
-                      pilot.aircraft
-
-                    )
-
-                }
-
-              )
-
-              .addTo(
-
-                map
-
-              )
-
-              .bindPopup(
-
-                popupHtml(
-
-                  pilot
-
-                )
-
-              );
-
-
-            markers[
-
-              callsign
-
-            ] =
-
-              newMarker;
-
-          }
-
+      pilots.forEach(function (pilot) {
+        if (pilot.callsign == null || pilot.lat == null || pilot.lon == null) {
+          return;
         }
 
-      );
+        const callsign = pilot.callsign;
+        seen[callsign] = true;
 
+        const marker = markers[callsign];
 
-      Object.keys(
-
-        markers
-
-      ).forEach(
-
-        function(
-
-          callsign
-
-        ) {
-
-
-          if (
-
-            !seen[
-
-              callsign
-
-            ]
-
-          ) {
-
-
-            map.removeLayer(
-
-              markers[
-
-                callsign
-
-              ]
-
-            );
-
-
-            delete markers[
-
-              callsign
-
-            ];
-
-          }
-
+        if (marker) {
+          glide(marker, [Number(pilot.lat), Number(pilot.lon)]);
+          marker.setIcon(planeIcon(callsign, pilot.heading));
+          marker.setPopupContent(popupHtml(pilot));
+        } else {
+          markers[callsign] =
+            L.marker([Number(pilot.lat), Number(pilot.lon)], {
+              icon: planeIcon(callsign, pilot.heading)
+            })
+            .addTo(map)
+            .bindPopup(popupHtml(pilot));
         }
+      });
 
-      );
-
+      Object.keys(markers).forEach(function (callsign) {
+        if (!seen[callsign]) {
+          map.removeLayer(markers[callsign]);
+          delete markers[callsign];
+        }
+      });
     }
 
-
-    // ─────────────────────────────────────────────
     // DATA
-    // ─────────────────────────────────────────────
-
     async function load() {
-
-
       try {
+        const response = await fetch('https://ourradiofs.duckdns.org/map/data', {
+          cache: 'no-store'
+        });
 
+        if (!response.ok) { throw new Error('HTTP ' + response.status); }
 
-        const response =
-
-          await fetch(
-
-            'https://ourradiofs.duckdns.org/map/data',
-
-            {
-
-              cache:
-
-                'no-store'
-
-            }
-
-          );
-
-
-        if (
-
-          !response.ok
-
-        ) {
-
-
-          throw new Error(
-
-            'HTTP '
-
-            +
-
-            response.status
-
-          );
-
-        }
-
-
-        const data =
-
-          await response.json();
-
+        const data = await response.json();
 
         const pilots =
+          Array.isArray(data) ? data
+          : Array.isArray(data.pilots) ? data.pilots
+          : [];
 
-          Array.isArray(
-
-            data
-
-          )
-
-            ? data
-
-            : Array.isArray(
-
-                data.pilots
-
-              )
-
-              ? data.pilots
-
-              : [];
-
-
-        render(
-
-          pilots
-
-        );
-
+        render(pilots);
+      } catch (error) {
+        console.error('Error loading pilots:', error);
+        render([]);
       }
-
-
-      catch (
-
-        error
-
-      ) {
-
-
-        console.error(
-
-          'Error loading pilots:',
-
-          error
-
-        );
-
-
-        render(
-
-          []
-
-        );
-
-      }
-
     }
 
-
     load();
-
-
-    setInterval(
-
-      load,
-
-      REFRESH_MS
-
-    );
-
-
+    setInterval(load, REFRESH_MS);
   </script>
-
-
 </body>
-
 </html>
+
 
