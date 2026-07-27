@@ -448,7 +448,7 @@
               icon: planeIcon(callsign, pilot.heading)
             })
             .addTo(map)
-            .bindPopup(popupHtml(pilot));
+            .bindPopup(popupHtml(pilot), { autoPan: false, keepInView: false });
         }
       });
 
@@ -488,5 +488,6 @@
   </script>
 </body>
 </html>
+
 
 
