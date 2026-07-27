@@ -501,8 +501,8 @@
 
       const heading =
         pilot.heading != null
-          ? Math.round(pilot.heading) + '°'
-          : '—';
+          ? String(Math.round(pilot.heading)).padStart(3, '0') + '°'
+        : '—';
 
       const frequency = fmtFreq(pilot.freq);
 
