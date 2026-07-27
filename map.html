@@ -398,33 +398,6 @@
     const markers = {};
     const REFRESH_MS = 5000;
 
-    function glide(marker, target) {
-      const from = marker.getLatLng();
-
-      if (Math.abs(from.lat - target[0]) < 0.000001 &&
-          Math.abs(from.lng - target[1]) < 0.000001) {
-        return;
-      }
-
-      if (marker._raf) { cancelAnimationFrame(marker._raf); }
-
-      const start = performance.now();
-      const duration = REFRESH_MS * 1.25;
-
-      function step(now) {
-        const t = Math.min(1, (now - start) / duration);
-
-        marker.setLatLng([
-          from.lat + (target[0] - from.lat) * t,
-          from.lng + (target[1] - from.lng) * t
-        ]);
-
-        if (t < 1) { marker._raf = requestAnimationFrame(step); }
-      }
-
-      marker._raf = requestAnimationFrame(step);
-    }
-
     function render(pilots) {
       const seen = {};
 
@@ -439,7 +412,7 @@
         const marker = markers[callsign];
 
         if (marker) {
-          glide(marker, [Number(pilot.lat), Number(pilot.lon)]);
+          marker.setLatLng([Number(pilot.lat), Number(pilot.lon)]);
           marker.setIcon(planeIcon(callsign, pilot.heading));
           marker.setPopupContent(popupHtml(pilot));
         } else {
