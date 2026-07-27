@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -6,277 +7,741 @@
 <title>OurRadioFS — live pilot map</title>
 <meta name="description" content="Live map of OurRadioFS pilots who chose to share their position. Tune their frequency and say hello.">
 <link rel="icon" href="assets/favicon.ico">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+
 <style>
   :root{
-    --bg:#0D1117; --surface:#161B22; --border:#30363D;
-    --text:#C9D1D9; --title:#E6EDF3; --muted:#6E7681; --amber:#E8A33D;
+    --bg:#0D1117;
+    --surface:#161B22;
+    --border:#30363D;
+    --text:#C9D1D9;
+    --title:#E6EDF3;
+    --muted:#6E7681;
+    --amber:#E8A33D;
     --mono:'Consolas','SF Mono','Roboto Mono',ui-monospace,monospace;
     --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
-       -webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
-  a{color:inherit;text-decoration:none}
+
+  *{
+    box-sizing:border-box;
+  }
+
+  html,
+  body{
+    height:100%;
+  }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+  }
+
+  a{
+    color:inherit;
+    text-decoration:none;
+  }
 
   /* Header */
-  header{display:flex;align-items:center;height:56px;gap:12px;padding:0 18px;
-         background:rgba(13,17,23,.9);border-bottom:1px solid var(--border);z-index:1200}
-  .brand{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--title);font-size:16px}
-  .brand img{width:26px;height:26px}
-  header .links{margin-left:auto;display:flex;gap:20px;align-items:center;font-size:14px}
-  header .links a{color:var(--text)}
-  header .links a:hover{color:var(--title)}
-  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;
-       padding:8px 15px;border-radius:8px;border:1px solid var(--border);cursor:pointer}
-  .btn-primary{background:var(--amber);color:#1a1205 !important;border-color:var(--amber)}
+  header{
+    display:flex;
+    align-items:center;
+    height:56px;
+    gap:12px;
+    padding:0 18px;
+    background:rgba(13,17,23,.9);
+    border-bottom:1px solid var(--border);
+    z-index:1200;
+  }
 
-  /* Full-bleed map */
-  #map{flex:1;background:#0a0d12;min-height:0}
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-weight:700;
+    color:var(--title);
+    font-size:16px;
+  }
+
+  .brand img{
+    width:26px;
+    height:26px;
+  }
+
+  header .links{
+    margin-left:auto;
+    display:flex;
+    gap:20px;
+    align-items:center;
+    font-size:14px;
+  }
+
+  header .links a{
+    color:var(--text);
+  }
+
+  header .links a:hover{
+    color:var(--title);
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
+    font-size:14px;
+    padding:8px 15px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    cursor:pointer;
+  }
+
+  .btn-primary{
+    background:var(--amber);
+    color:#1a1205 !important;
+    border-color:var(--amber);
+  }
+
+  /* Map */
+  #map{
+    flex:1;
+    background:#0a0d12;
+    min-height:0;
+  }
+
+  .leaflet-container{
+    background:#0a0d12;
+  }
 
   /* Aircraft marker */
-  .plane{color:var(--amber);filter:drop-shadow(0 0 5px rgba(232,163,61,.55));transform-origin:center}
-  .plane svg{display:block}
-  .tag{font-family:var(--mono);font-size:10px;color:var(--title);background:rgba(13,17,23,.82);
-       border:1px solid var(--border);border-radius:5px;padding:1px 5px;white-space:nowrap;
-       transform:translate(-50%,4px);position:absolute;left:50%}
+  .plane-marker{
+    position:relative;
+    width:80px;
+    height:42px;
+    pointer-events:auto;
+  }
+
+  .plane-marker .plane{
+    position:absolute;
+    left:27px;
+    top:7px;
+    width:26px;
+    height:26px;
+    color:var(--amber);
+    filter:drop-shadow(0 0 5px rgba(232,163,61,.55));
+    transform-origin:center center;
+  }
+
+  .plane-marker .plane svg{
+    display:block;
+    width:26px;
+    height:26px;
+  }
+
+  .plane-marker .tag{
+    position:absolute;
+    left:40px;
+    top:31px;
+    transform:translateX(-50%);
+    font-family:var(--mono);
+    font-size:10px;
+    line-height:14px;
+    color:var(--title);
+    background:rgba(13,17,23,.9);
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:1px 5px;
+    white-space:nowrap;
+  }
 
   /* Leaflet tweaks */
-  .leaflet-container{background:#0a0d12}
-  .leaflet-bar a{background:var(--surface);color:var(--text);border-color:var(--border)}
-  .leaflet-bar a:hover{background:#1b212b}
-  .leaflet-control-attribution{background:rgba(13,17,23,.7)!important;color:var(--muted)!important}
-  .leaflet-control-attribution a{color:var(--muted)!important}
+  .leaflet-bar a{
+    background:var(--surface);
+    color:var(--text);
+    border-color:var(--border);
+  }
 
-  /* --- PREMIUM POPUP STYLE (DARK MODE & AUTO-RESIZING) --- */
-  .leaflet-popup-content-wrapper {
-      padding: 0 !important;
-      border-radius: 12px !important;
-      overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.8) !important;
-      background: transparent !important;
-      border: 1px solid var(--border);
+  .leaflet-bar a:hover{
+    background:#1b212b;
   }
-  .leaflet-popup-tip {
-      background: var(--bg) !important; 
+
+  .leaflet-control-attribution{
+    background:rgba(13,17,23,.7)!important;
+    color:var(--muted)!important;
   }
-  .leaflet-popup-content {
-      margin: 0 !important;
-      width: max-content !important; 
-      min-width: 210px; 
+
+  .leaflet-control-attribution a{
+    color:var(--muted)!important;
   }
-  .flight-popup {
-      font-family: var(--sans);
-      color: var(--text);
-      background: var(--surface);
+
+  /* Popup */
+  .leaflet-popup-content-wrapper{
+    padding:0!important;
+    border-radius:12px!important;
+    overflow:hidden;
+    box-shadow:0 10px 25px rgba(0,0,0,.8)!important;
+    background:transparent!important;
+    border:1px solid var(--border);
   }
-  /* Header */
-  .flight-popup-header {
-      background: rgba(255, 255, 255, 0.03);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
+
+  .leaflet-popup-tip{
+    background:var(--bg)!important;
   }
-  .flight-popup-title {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
+
+  .leaflet-popup-content{
+    margin:0!important;
+    width:max-content!important;
+    min-width:210px;
   }
-  .flight-popup-callsign {
-      font-size: 17px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      font-family: var(--mono);
-      color: var(--title);
+
+  .flight-popup{
+    font-family:var(--sans);
+    color:var(--text);
+    background:var(--surface);
   }
-  .flight-popup-aircraft {
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 600;
+
+  .flight-popup-header{
+    background:rgba(255,255,255,.03);
+    border-bottom:1px solid var(--border);
+    padding:12px 16px;
+    display:flex;
+    align-items:center;
   }
-  /* Body - Cuadrícula exacta de 2x2 */
-  .flight-popup-body {
-      padding: 16px;
+
+  .flight-popup-title{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
   }
-  .flight-popup-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(80px, 1fr));
-      gap: 16px 20px;
-      margin-bottom: 0;
+
+  .flight-popup-callsign{
+    font-size:17px;
+    font-weight:800;
+    letter-spacing:.5px;
+    font-family:var(--mono);
+    color:var(--title);
   }
-  .flight-data-item {
-      display: flex;
-      flex-direction: column;
+
+  .flight-popup-aircraft{
+    font-size:13px;
+    color:var(--muted);
+    font-weight:600;
   }
-  .flight-data-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 700;
-      margin-bottom: 2px;
+
+  .flight-popup-body{
+    padding:16px;
   }
-  .flight-data-value {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--title);
+
+  .flight-popup-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(80px,1fr));
+    gap:16px 20px;
+    margin-bottom:0;
   }
-  /* Footer / Radio */
-  .flight-popup-footer {
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
+
+  .flight-data-item{
+    display:flex;
+    flex-direction:column;
   }
-  .freq-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+
+  .flight-data-label{
+    font-size:10px;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:700;
+    margin-bottom:2px;
   }
-  .freq-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text);
-      background: var(--border);
-      padding: 2px 6px;
-      border-radius: 4px;
+
+  .flight-data-value{
+    font-size:14px;
+    font-weight:600;
+    color:var(--title);
   }
-  .freq-value {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--amber);
-      font-family: var(--mono);
+
+  .flight-popup-footer{
+    background:var(--bg);
+    border-top:1px solid var(--border);
+    padding:12px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+  }
+
+  .freq-box{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .freq-label{
+    font-size:11px;
+    font-weight:700;
+    color:var(--text);
+    background:var(--border);
+    padding:2px 6px;
+    border-radius:4px;
+  }
+
+  .freq-value{
+    font-size:15px;
+    font-weight:700;
+    color:var(--amber);
+    font-family:var(--mono);
   }
 </style>
+
 </head>
+
 <body>
 
 <header>
-  <a class="brand" href="index.html"><img src="assets/logo.png" alt="">OurRadioFS</a>
+  <a class="brand" href="index.html">
+    <img src="assets/logo.png" alt="">
+    OurRadioFS
+  </a>
+
   <nav class="links">
     <a href="index.html">Home</a>
-    <a class="btn btn-primary" href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download</a>
+
+```
+<a class="btn btn-primary"
+   href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio"
+   target="_blank"
+   rel="noopener">
+  Download
+</a>
+```
+
   </nav>
 </header>
 
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-  // ── Map ────────────────────────────────────────────────────────────
-  var map = L.map('map', { worldCopyJump:true, zoomControl:true, attributionControl:true })
-              .setView([46.5, 8.0], 5);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    subdomains:'abcd', maxZoom:19,
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
-  }).addTo(map);
+  // ─────────────────────────────────────────────
+  // MAP
+  // ─────────────────────────────────────────────
 
-  var PLANE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">'+
-    '<path d="M12 2c-.6 0-1 .9-1 2v5.2L3 14v2l8-2.3V19l-2 1.2V22l3-.9 3 .9v-1.8L13 19v-5.3l8 2.3v-2l-8-4.8V4c0-1.1-.4-2-1-2z"/></svg>';
+  var map = L.map('map', {
+    worldCopyJump: true,
+    zoomControl: true,
+    attributionControl: true
+  }).setView([46.5, 8.0], 5);
 
-  function planeIcon(cs, heading){
+  L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors ' +
+        '&copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
+    }
+  ).addTo(map);
+
+
+  // ─────────────────────────────────────────────
+  // AIRCRAFT ICON
+  // ─────────────────────────────────────────────
+
+  var PLANE =
+    '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">' +
+      '<path d="M12 2c-.6 0-1 .9-1 2v5.2L3 14v2l8-2.3V19l-2 1.2V22l3-.9 3 .9v-1.8L13 19v-5.3l8 2.3v-2l-8-4.8V4c0-1.1-.4-2-1-2z"/>' +
+    '</svg>';
+
+
+  function planeIcon(callsign, heading){
+
+    var rotation = Number(heading) || 0;
+
     return L.divIcon({
-      className:'', iconSize:[26,26], iconAnchor:[13,13],
-      html:'<div class="plane" style="transform:rotate('+(heading||0)+'deg)">'+PLANE+'</div>'+
-           '<div class="tag">'+esc(cs)+'</div>'
+
+      className: 'plane-marker',
+
+      iconSize: [80, 42],
+
+      iconAnchor: [40, 21],
+
+      html:
+        '<div class="plane" style="transform:rotate(' + rotation + 'deg)">' +
+          PLANE +
+        '</div>' +
+
+        '<div class="tag">' +
+          esc(callsign) +
+        '</div>'
     });
   }
-  
+
+
+  // ─────────────────────────────────────────────
+  // POPUP
+  // ─────────────────────────────────────────────
+
   function popupHtml(p){
-    var ac = p.aircraft || '—';
-    var alt = p.alt != null ? fmtAlt(p.alt) + ' ft' : '—';
-    var spd = p.speed != null ? Math.round(p.speed) + ' kts' : '—';
-    var dist = p.dist != null ? Number(p.dist).toFixed(1) + ' km' : (p.distance != null ? Number(p.distance).toFixed(1) + ' km' : '—');
-    var hdg = p.heading != null ? Math.round(p.heading) + '°' : '—';
+
+    var ac =
+      p.aircraft != null
+        ? p.aircraft
+        : '—';
+
+    var alt =
+      p.alt != null
+        ? fmtAlt(p.alt) + ' ft'
+        : '—';
+
+    var spd =
+      p.speed != null
+        ? Math.round(p.speed) + ' kts'
+        : '—';
+
+    var dist =
+      p.dist != null
+        ? Number(p.dist).toFixed(1) + ' km'
+        : (
+            p.distance != null
+              ? Number(p.distance).toFixed(1) + ' km'
+              : '—'
+          );
+
+    var hdg =
+      p.heading != null
+        ? Math.round(p.heading) + '°'
+        : '—';
+
     var freq = fmtFreq(p.freq);
+
 
     return `
       <div class="flight-popup">
+
         <div class="flight-popup-header">
           <div class="flight-popup-title">
-            <span class="flight-popup-callsign">${esc(p.callsign)}</span>
-            <span class="flight-popup-aircraft">${esc(ac)}</span>
+            <span class="flight-popup-callsign">
+              ${esc(p.callsign)}
+            </span>
+
+            <span class="flight-popup-aircraft">
+              ${esc(ac)}
+            </span>
           </div>
         </div>
+
         <div class="flight-popup-body">
           <div class="flight-popup-grid">
+
             <div class="flight-data-item">
               <span class="flight-data-label">Altitude</span>
-              <span class="flight-data-value">${esc(alt)}</span>
+              <span class="flight-data-value">
+                ${esc(alt)}
+              </span>
             </div>
+
             <div class="flight-data-item">
               <span class="flight-data-label">Speed</span>
-              <span class="flight-data-value">${esc(spd)}</span>
+              <span class="flight-data-value">
+                ${esc(spd)}
+              </span>
             </div>
+
             <div class="flight-data-item">
               <span class="flight-data-label">Distance</span>
-              <span class="flight-data-value">${esc(dist)}</span>
+              <span class="flight-data-value">
+                ${esc(dist)}
+              </span>
             </div>
+
             <div class="flight-data-item">
               <span class="flight-data-label">Heading</span>
-              <span class="flight-data-value">${esc(hdg)}</span>
+              <span class="flight-data-value">
+                ${esc(hdg)}
+              </span>
             </div>
+
           </div>
         </div>
+
         <div class="flight-popup-footer">
           <div class="freq-box">
             <span class="freq-label">COM1</span>
-            <span class="freq-value">${esc(freq)}</span>
+
+            <span class="freq-value">
+              ${esc(freq)}
+            </span>
           </div>
         </div>
+
       </div>
     `;
   }
-  
-  function esc(s){return (s==null?'':String(s)).replace(/[<&>]/g,function(c){return {'<':'&lt;','&':'&amp;','>':'&gt;'}[c];});}
-  function fmtFreq(f){ return (f==null||f<=0)?'—':Number(f).toFixed(3); }
-  function fmtAlt(a){ return Math.round(a).toLocaleString('en-US'); }
+
+
+  // ─────────────────────────────────────────────
+  // HELPERS
+  // ─────────────────────────────────────────────
+
+  function esc(s){
+
+    return (s == null ? '' : String(s))
+      .replace(/[<&>]/g, function(c){
+
+        return {
+          '<': '&lt;',
+          '&': '&amp;',
+          '>': '&gt;'
+        }[c];
+
+      });
+  }
+
+
+  function fmtFreq(f){
+
+    return (
+      f == null ||
+      Number(f) <= 0
+    )
+      ? '—'
+      : Number(f).toFixed(3);
+  }
+
+
+  function fmtAlt(a){
+
+    return Math.round(a)
+      .toLocaleString('en-US');
+  }
+
+
+  // ─────────────────────────────────────────────
+  // MARKERS
+  // ─────────────────────────────────────────────
 
   var markers = {};
+
   var REFRESH_MS = 5000;
 
-  function glide(m, to){
-    var from = m.getLatLng();
-    if (Math.abs(from.lat-to[0]) < 1e-6 && Math.abs(from.lng-to[1]) < 1e-6) return;
-    if (m._raf) cancelAnimationFrame(m._raf);
-    var start = performance.now(), dur = REFRESH_MS * 1.25;
-    function step(now){
-      var t = Math.min(1, (now-start)/dur);
-      m.setLatLng([from.lat + (to[0]-from.lat)*t, from.lng + (to[1]-from.lng)*t]);
-      if (t < 1) m._raf = requestAnimationFrame(step);
+
+  function glide(marker, to){
+
+    var from = marker.getLatLng();
+
+    if(
+      Math.abs(from.lat - to[0]) < 0.000001 &&
+      Math.abs(from.lng - to[1]) < 0.000001
+    ){
+      return;
     }
-    m._raf = requestAnimationFrame(step);
+
+    if(marker._raf){
+      cancelAnimationFrame(marker._raf);
+    }
+
+    var start = performance.now();
+
+    var duration = REFRESH_MS * 1.25;
+
+
+    function step(now){
+
+      var t = Math.min(
+        1,
+        (now - start) / duration
+      );
+
+      marker.setLatLng([
+
+        from.lat +
+        (to[0] - from.lat) * t,
+
+        from.lng +
+        (to[1] - from.lng) * t
+
+      ]);
+
+
+      if(t < 1){
+
+        marker._raf =
+          requestAnimationFrame(step);
+      }
+    }
+
+
+    marker._raf =
+      requestAnimationFrame(step);
   }
+
 
   function render(pilots){
-    var seen={};
-    pilots.forEach(function(p){
-      seen[p.callsign]=1;
-      var m=markers[p.callsign];
-      if(m){ glide(m,[p.lat,p.lon]); m.setIcon(planeIcon(p.callsign,p.heading)); m.setPopupContent(popupHtml(p)); }
-      else { m=L.marker([p.lat,p.lon],{icon:planeIcon(p.callsign,p.heading)}).addTo(map).bindPopup(popupHtml(p)); markers[p.callsign]=m; }
+
+    var seen = {};
+
+
+    pilots.forEach(function(pilot){
+
+      if(
+        pilot.callsign == null ||
+        pilot.lat == null ||
+        pilot.lon == null
+      ){
+        return;
+      }
+
+
+      var callsign = pilot.callsign;
+
+      seen[callsign] = true;
+
+
+      var marker = markers[callsign];
+
+
+      if(marker){
+
+        glide(
+          marker,
+          [
+            Number(pilot.lat),
+            Number(pilot.lon)
+          ]
+        );
+
+        marker.setIcon(
+          planeIcon(
+            callsign,
+            pilot.heading
+          )
+        );
+
+        marker.setPopupContent(
+          popupHtml(pilot)
+        );
+
+      }
+
+      else{
+
+        marker = L.marker(
+
+          [
+            Number(pilot.lat),
+            Number(pilot.lon)
+          ],
+
+          {
+            icon: planeIcon(
+              callsign,
+              pilot.heading
+            )
+          }
+
+        )
+        .addTo(map)
+        .bindPopup(
+          popupHtml(pilot)
+        );
+
+
+        markers[callsign] = marker;
+      }
+
     });
-    Object.keys(markers).forEach(function(cs){ if(!seen[cs]){ map.removeLayer(markers[cs]); delete markers[cs]; }});
+
+
+    Object.keys(markers).forEach(function(callsign){
+
+      if(!seen[callsign]){
+
+        map.removeLayer(
+          markers[callsign]
+        );
+
+        delete markers[callsign];
+      }
+
+    });
+
   }
 
-  // ── Data ───────────────────────────────────────────────────────────
+
+  // ─────────────────────────────────────────────
+  // DATA
+  // ─────────────────────────────────────────────
+
   async function load(){
+
     try{
-      var r=await fetch('https://ourradiofs.duckdns.org/map/data',{cache:'no-store'});
-      if(!r.ok) throw 0;
-      var d=await r.json();
-      render(Array.isArray(d)?d:(d.pilots||[]));
-    }catch(e){
-      render([]); 
+
+      var response =
+        await fetch(
+          'https://ourradiofs.duckdns.org/map/data',
+          {
+            cache: 'no-store'
+          }
+        );
+
+
+      if(!response.ok){
+
+        throw new Error(
+          'HTTP ' + response.status
+        );
+      }
+
+
+      var data =
+        await response.json();
+
+
+      var pilots =
+        Array.isArray(data)
+          ? data
+          : (
+              Array.isArray(data.pilots)
+                ? data.pilots
+                : []
+            );
+
+
+      render(pilots);
+
     }
+
+    catch(error){
+
+      console.error(
+        'Error loading pilots:',
+        error
+      );
+
+      render([]);
+    }
+
   }
-  load(); setInterval(load, REFRESH_MS);
+
+
+  // Initial load
+  load();
+
+
+  // Refresh every 5 seconds
+  setInterval(
+    load,
+    REFRESH_MS
+  );
+
 </script>
+
 </body>
 </html>
+
