@@ -136,6 +136,9 @@
       white-space: nowrap;
     }
 
+    /* Etiqueta oculta cuando chocaría con otra (decluttering estilo FR24) */
+    .plane-marker.no-label .tag { display: none; }
+
     /* LEAFLET */
     .leaflet-bar a {
       background: var(--surface);
@@ -399,6 +402,31 @@
     const markers = {};
     const REFRESH_MS = 5000;
 
+    // Decluttering de etiquetas: muestra las que caben sin pisarse y oculta las que
+    // chocarían (estilo FR24). El avión oculto sigue clicable → el nombre está en el popup.
+    // Orden estable (por callsign) para que no parpadeen: siempre gana el mismo.
+    function declutterLabels() {
+      const placed = [];
+      Object.keys(markers).sort().forEach(function (cs) {
+        const m = markers[cs];
+        const el = m.getElement();
+        if (!el) return;
+        const p = map.latLngToLayerPoint(m.getLatLng());
+        const w = cs.length * 6 + 12, h = 16;
+        const cx = p.x, cy = p.y + 18;
+        let hide = false;
+        for (let i = 0; i < placed.length; i++) {
+          const b = placed[i];
+          if (Math.abs(cx - b.cx) < (w + b.w) / 2 + 2 &&
+              Math.abs(cy - b.cy) < (h + b.h) / 2 + 2) { hide = true; break; }
+        }
+        el.classList.toggle('no-label', hide);
+        if (!hide) placed.push({ cx: cx, cy: cy, w: w, h: h });
+      });
+    }
+
+    map.on('zoomend', declutterLabels);
+
     function render(pilots) {
       const seen = {};
 
@@ -432,6 +460,8 @@
           delete markers[callsign];
         }
       });
+
+      declutterLabels();
     }
 
     // DATA
@@ -462,6 +492,9 @@
   </script>
 </body>
 </html>
+
+
+
 
 
 
