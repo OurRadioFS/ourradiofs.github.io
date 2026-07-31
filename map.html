@@ -93,7 +93,10 @@
 
     /* AIRCRAFT MARKER */
     .plane-marker {
-      position: relative;
+      /* absolute (no relative): Leaflet coloca cada marcador con transform; si es
+         relative, los marcadores se apilan en el flujo del documento y salen "en fila"
+         cuando dos aviones están en el mismo punto en vez de superponerse. */
+      position: absolute;
       width: 80px;
       height: 42px;
       pointer-events: auto;
@@ -134,7 +137,14 @@
       font-size: 10px;
       line-height: 14px;
       white-space: nowrap;
+      display: none;            /* oculto por defecto: al alejar se amontonan */
     }
+
+    /* Nombres solo al acercar el zoom (los aviones ya están separados) o al pasar el
+       ratón por encima. Al alejar se ven solo los iconos: limpio como FlightRadar. */
+    #map.show-tags .plane-marker .tag { display: block; }
+    .plane-marker:hover .tag { display: block; }
+    .plane-marker:hover { z-index: 10000 !important; }
 
     /* LEAFLET */
     .leaflet-bar a {
@@ -287,7 +297,9 @@
   <script>
     // MAP
     const map = L.map('map', {
-      worldCopyJump: true,
+      minZoom: 2,
+      maxBounds: [[-85, -180], [85, 180]],
+      maxBoundsViscosity: 1.0,
       zoomControl: true,
       attributionControl: true
     }).setView([46.5, 8.0], 5);
@@ -295,10 +307,21 @@
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 19,
+      noWrap: true,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors ' +
         '&copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
     }).addTo(map);
+
+    // Etiquetas visibles solo con zoom alto (al acercar, los aviones ya están separados).
+    // Al alejar → solo iconos, sin amontonar nombres. En cualquier zoom, el hover muestra
+    // el nombre de un avión concreto. Sin ocultar ni mover nada: puro CSS por nivel de zoom.
+    const LABEL_ZOOM = 7;
+    function updateLabelVisibility() {
+      map.getContainer().classList.toggle('show-tags', map.getZoom() >= LABEL_ZOOM);
+    }
+    map.on('zoomend', updateLabelVisibility);
+    updateLabelVisibility();
 
     // AIRCRAFT ICON (single, top-down, points north at 0deg so it rotates with heading)
     const PLANE_ICON =
@@ -408,17 +431,26 @@
         }
 
         const callsign = pilot.callsign;
+        const lat = Number(pilot.lat), lon = Number(pilot.lon);
+        // Ignora posiciones basura con lat≈0 (Null Island / ecuador, frente a África):
+        // MSFS reporta (0,0), (0,90) y variantes al cargar; TODAS tienen lat≈0 (por eso el
+        // "en vuelo" de la app se basa en lat≠0). Una lectura mala teletransportaría el
+        // avión al ecuador; se mantiene el marcador en su última posición buena.
+        if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) < 0.02) {
+          if (markers[callsign]) { seen[callsign] = true; }
+          return;
+        }
         seen[callsign] = true;
 
         const marker = markers[callsign];
 
         if (marker) {
-          marker.setLatLng([Number(pilot.lat), Number(pilot.lon)]);
+          marker.setLatLng([lat, lon]);
           marker.setIcon(planeIcon(callsign, pilot.heading));
           marker.setPopupContent(popupHtml(pilot));
         } else {
           markers[callsign] =
-            L.marker([Number(pilot.lat), Number(pilot.lon)], {
+            L.marker([lat, lon], {
               icon: planeIcon(callsign, pilot.heading)
             })
             .addTo(map)
