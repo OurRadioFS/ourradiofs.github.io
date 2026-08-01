@@ -297,9 +297,7 @@
   <script>
     // MAP
     const map = L.map('map', {
-      minZoom: 2,
-      maxBounds: [[-85, -180], [85, 180]],
-      maxBoundsViscosity: 1.0,
+      worldCopyJump: true,   // loop infinito: el mundo se repite al desplazar
       zoomControl: true,
       attributionControl: true
     }).setView([46.5, 8.0], 5);
@@ -307,7 +305,6 @@
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 19,
-      noWrap: true,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors ' +
         '&copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
@@ -322,6 +319,25 @@
     }
     map.on('zoomend', updateLabelVisibility);
     updateLabelVisibility();
+
+    // Popup pegado al borde: se cortaba. El autoPan de Leaflet no ajusta bien con contenido
+    // custom (corre antes de conocer el tamaño del popup). Al abrir uno, tras el layout, si
+    // sobresale del contenedor paneamos lo justo para que quepa entero (con margen).
+    map.on('popupopen', function (e) {
+      setTimeout(function () {
+        const el = e.popup.getElement();
+        if (!el) return;
+        const m = map.getContainer().getBoundingClientRect();
+        const r = el.getBoundingClientRect();
+        const pad = 16;
+        let dx = 0, dy = 0;
+        if (r.left < m.left + pad) dx = r.left - (m.left + pad);
+        else if (r.right > m.right - pad) dx = r.right - (m.right - pad);
+        if (r.top < m.top + pad) dy = r.top - (m.top + pad);
+        else if (r.bottom > m.bottom - pad) dy = r.bottom - (m.bottom - pad);
+        if (dx || dy) map.panBy([dx, dy], { animate: true });
+      }, 0);
+    });
 
     // AIRCRAFT ICON (single, top-down, points north at 0deg so it rotates with heading)
     const PLANE_ICON =
@@ -494,6 +510,10 @@
   </script>
 </body>
 </html>
+
+
+
+
 
 
 
