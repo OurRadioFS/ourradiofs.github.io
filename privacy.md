@@ -4,7 +4,7 @@ OurRadioFS is designed to collect the bare minimum. There are no accounts, no
 sign-up, no email and no tracking. This policy explains the little data that is
 involved and why.
 Data controller
-Miquel Angel — Contact: ourradiofs@outlook.com
+MiquelG82 — Contact: ourradiofs@outlook.com
 What data is involved
 Callsign: an identifier you choose yourself. It does not have to be your
 real name; it can be any alias. It is shown to other pilots on your frequency.
