@@ -178,6 +178,10 @@
       margin: 0 !important;
       width: max-content !important;
       min-width: 180px;
+      /* TOPE DE ANCHO. Los aviones de mods traen nombres larguísimos ("Boeing 737-800
+         BBJ Winglets Ultimate Livery…"): sin tope, max-content estiraba el popup hasta
+         taparle media pantalla al usuario. Aquí se corta y el nombre se elide. */
+      max-width: 260px !important;
     }
 
     .flight-popup {
@@ -186,32 +190,51 @@
       font-family: var(--sans);
     }
 
+    /* CABECERA: indicativo y avión en la misma línea, el avión justo al lado. */
     .flight-popup-header {
       display: flex;
       align-items: center;
-      padding: 9px 12px;
+      gap: 9px;
+      /* El hueco de la derecha NO es decorativo: la X de cerrar de Leaflet va posicionada
+         en absoluto sobre la esquina superior derecha del popup (24x24 px en 1.9.4). Sin
+         reservarle sitio, la chapa del avión se le metía debajo. */
+      /* 7px arriba y abajo, no 10: con el indicativo a 17px la cabecera se iba a 40px de
+         alto y sobresalía sobre el pie (34px), que es lo que la hacía parecer hinchada.
+         Así las dos bandas miden lo mismo y enmarcan el cuerpo por igual. */
+      padding: 7px 30px 7px 12px;
       background: rgba(255, 255, 255, 0.03);
       border-bottom: 1px solid var(--border);
     }
 
-    .flight-popup-title {
-      display: flex;
-      align-items: baseline;
-      gap: 7px;
-    }
-
+    /* El indicativo manda: es el dato con el que le llamas por radio. */
     .flight-popup-callsign {
+      min-width: 0;
+      overflow: hidden;
       color: var(--title);
       font-family: var(--mono);
-      font-size: 15px;
+      font-size: 17px;
       font-weight: 800;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.6px;
+      line-height: 1.15;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
+    /* El avión va en su propia chapa para que se lea como un designador de tipo y no
+       como texto suelto; rima con la chapa COM1 del pie. Llega ya recortado desde JS,
+       así que no encoge: el hueco que ocupa es siempre acotado. */
     .flight-popup-aircraft {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 600;
+      flex: 0 0 auto;
+      padding: 2px 7px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .flight-popup-body { padding: 11px 12px; }
@@ -253,7 +276,11 @@
 
     .freq-box {
       display: flex;
-      align-items: center;
+      /* baseline, no center: son dos tipografías distintas (la chapa en sans a 10px, la
+         frecuencia en mono a 13px). Centrando las CAJAS, las letras quedan a alturas
+         distintas y se ve que "no están en la misma línea". Alineando las BASES, se
+         apoyan en el mismo renglón, que es lo que percibe el ojo. */
+      align-items: baseline;
       gap: 7px;
     }
 
@@ -271,6 +298,48 @@
       font-family: var(--mono);
       font-size: 13px;
       font-weight: 700;
+    }
+
+    /* RUTA (origen → destino) en el popup — solo ICAO, avión avanzando por el % */
+    .route {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px 3px;
+    }
+    .route-icao {
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .route-line {
+      position: relative;
+      flex: 1;
+      height: 2px;
+      /* tramo restante: discontinuo */
+      background: repeating-linear-gradient(90deg,
+        var(--border) 0 5px, transparent 5px 9px);
+    }
+    .route-done {
+      position: absolute;
+      left: 0; top: 0;
+      height: 2px;
+      background: var(--amber);   /* tramo recorrido: sólido */
+    }
+    .route-plane {
+      position: absolute;
+      top: -7px;
+      transform: translateX(-50%);   /* centra en el % (la rotación va en el SVG) */
+      color: var(--amber);
+      line-height: 0;
+      transition: left 5s linear;
+    }
+    .route-plane svg {
+      display: block;
+      width: 15px;
+      height: 15px;
+      transform: rotate(90deg);      /* el avión apunta al norte a 0° → 90° = derecha (destino) */
     }
   </style>
 </head>
@@ -360,8 +429,27 @@
     }
 
     // POPUP
+    // Tope de caracteres del nombre del avión. Sale de la cuenta del ancho: 260 px de
+    // popup, menos el indicativo, menos el hueco de la X. Si se sube, el popup empieza
+    // a crecer y a bailar de tamaño según quién esté volando.
+    const AIRCRAFT_MAX_CHARS = 16;
+
     function popupHtml(pilot) {
-      const aircraft = pilot.aircraft != null ? pilot.aircraft : '—';
+      // Si no sabemos el avión no pintamos una chapa con un guion dentro: se queda
+      // solo el indicativo, que se lee mejor que un hueco relleno de nada.
+      //
+      // TOPE DE CARACTERES. Los aviones de mods traen nombres larguísimos ("Boeing
+      // 737-800 BBJ Winglets Ultimate Livery Pack"). Se cortan aquí, en el dato, y no
+      // solo con CSS: así el ancho de la cabecera es PREVISIBLE y el popup no baila de
+      // tamaño según quién esté volando. El nombre entero queda en el title.
+      const aircraft = pilot.aircraft != null ? String(pilot.aircraft).trim() : '';
+      const aircraftShort =
+        aircraft.length > AIRCRAFT_MAX_CHARS
+          ? aircraft.slice(0, AIRCRAFT_MAX_CHARS - 1).trimEnd() + '…'
+          : aircraft;
+      const aircraftChip = aircraft
+        ? `<span class="flight-popup-aircraft" title="${esc(aircraft)}">${esc(aircraftShort)}</span>`
+        : '';
 
       const altitude = pilot.alt != null ? fmtAlt(pilot.alt) + ' ft' : '—';
 
@@ -382,11 +470,10 @@
       return `
         <div class="flight-popup">
           <div class="flight-popup-header">
-            <div class="flight-popup-title">
-              <span class="flight-popup-callsign">${esc(pilot.callsign)}</span>
-              <span class="flight-popup-aircraft">${esc(aircraft)}</span>
-            </div>
+            <span class="flight-popup-callsign">${esc(pilot.callsign)}</span>
+            ${aircraftChip}
           </div>
+          ${routeStrip(pilot)}
           <div class="flight-popup-body">
             <div class="flight-popup-grid">
               <div class="flight-data-item">
@@ -418,9 +505,12 @@
     }
 
     // HELPERS
+    // Escapa también COMILLAS, no solo <&>: el nombre del avión ahora va dentro de un
+    // atributo (title="..."), y ahí una comilla suelta cerraría el atributo y dejaría
+    // inyectar HTML. El nombre lo manda el cliente, así que no es dato de confianza.
     function esc(value) {
-      return (value == null ? '' : String(value)).replace(/[<&>]/g, function (character) {
-        return { '<': '&lt;', '&': '&amp;', '>': '&gt;' }[character];
+      return (value == null ? '' : String(value)).replace(/[<&>"']/g, function (character) {
+        return { '<': '&lt;', '&': '&amp;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
       });
     }
 
@@ -432,6 +522,40 @@
 
     function fmtAlt(altitude) {
       return Math.round(altitude).toLocaleString('en-US');
+    }
+
+    // Distancia de círculo máximo (km) — para el % de ruta recorrida.
+    function haversineKm(lat1, lon1, lat2, lon2) {
+      const R = 6371, rad = d => d * Math.PI / 180;
+      const dLat = rad(lat2 - lat1), dLon = rad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // Tira de ruta (origen → destino) para el popup. Solo si el piloto trae dep/dest +
+    // coords (MSFS con plan cargado). VFR / X-Plane / sin plan → '' (no aparece).
+    function routeStrip(pilot) {
+      const dep = pilot.dep, dest = pilot.dest;
+      const dLat = Number(pilot.depLat), dLon = Number(pilot.depLon);
+      const aLat = Number(pilot.destLat), aLon = Number(pilot.destLon);
+      if (!dep || !dest || !isFinite(dLat) || !isFinite(dLon) || !isFinite(aLat) || !isFinite(aLon))
+        return '';
+      const total = haversineKm(dLat, dLon, aLat, aLon);
+      let pct = 0;
+      const cLat = Number(pilot.lat), cLon = Number(pilot.lon);
+      if (total > 1 && isFinite(cLat) && isFinite(cLon))
+        pct = Math.max(0, Math.min(1, haversineKm(dLat, dLon, cLat, cLon) / total));
+      const p = (pct * 100).toFixed(1);
+      return `
+        <div class="route">
+          <span class="route-icao">${esc(dep)}</span>
+          <div class="route-line">
+            <div class="route-done" style="width:${p}%"></div>
+            <div class="route-plane" style="left:${p}%"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.6 0-1 .9-1 2v5.2L3 14v2l8-2.3V19l-2 1.2V22l3-.9 3 .9v-1.8L13 19v-5.3l8 2.3v-2l-8-4.8V4c0-1.1-.4-2-1-2z"/></svg></div>
+          </div>
+          <span class="route-icao">${esc(dest)}</span>
+        </div>`;
     }
 
     // MARKERS
@@ -510,11 +634,6 @@
   </script>
 </body>
 </html>
-
-
-
-
-
 
 
 
