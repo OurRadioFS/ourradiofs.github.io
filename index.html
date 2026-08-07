@@ -113,6 +113,8 @@
 
   /* Sections */
   section{padding:56px 0;border-top:1px solid var(--border)}
+  /* La cabecera es sticky (60px): sin esto el ancla deja el título debajo de ella */
+  section[id]{scroll-margin-top:70px}
   .center{text-align:center;max-width:640px;margin:0 auto 40px}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
   .card{background:linear-gradient(180deg,rgba(255,255,255,.02),transparent),var(--surface);
@@ -141,6 +143,24 @@
             border:1px solid var(--border);border-radius:16px;
             padding:42px 36px;text-align:center}
 
+  /* Descarga: una tarjeta por simulador. Las DOS únicas URLs de descarga del fichero
+     están aquí; el resto de botones apuntan a #download con un ancla. */
+  .dl{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:760px;margin:0 auto}
+  .dl .opt{text-align:center;display:flex;flex-direction:column;align-items:center;padding:26px 22px}
+  .dl .opt .ico{margin:0 auto 16px}
+  .dl .opt h3{font-size:18px;margin-bottom:6px}
+  .dl .opt .sim{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 0 20px}
+  .dl .opt .btn{width:100%;justify-content:center;margin-top:auto}
+  .dl .opt .ver{font-family:var(--mono);font-size:11px;color:var(--muted);margin:12px 0 0}
+  .dl-note{text-align:center;font-size:13px;color:var(--muted);margin:22px auto 0;max-width:52ch}
+  @media(max-width:720px){.dl{grid-template-columns:1fr}}
+
+  /* Chapa oficial de Ko-fi: la imagen ya trae sus esquinas redondeadas y su fondo,
+     así que la sombra va con drop-shadow (respeta el alfa) y no con box-shadow. */
+  .kofi{display:inline-block;line-height:0;transition:transform .18s ease,filter .18s ease}
+  .kofi img{width:196px;height:auto;display:block}
+  .kofi:hover{transform:translateY(-2px);filter:drop-shadow(0 12px 26px rgba(0,0,0,.5))}
+
   footer{border-top:1px solid var(--border);padding:34px 0;color:var(--muted);font-size:13px}
   .fnav{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px}
   .fnav a:hover{color:var(--title)}
@@ -157,7 +177,7 @@
       <a href="#how">How it works</a>
       <a href="map.html">Live map</a>
       <a href="https://discord.gg/FG4xmEXppQ" target="_blank" rel="noopener">Discord</a>
-      <a class="btn btn-primary" href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download</a>
+      <a class="btn btn-primary" href="#download">Download</a>
     </nav>
   </div>
 </header>
@@ -169,7 +189,7 @@
     <h1>Talk to the pilots flying around you.</h1>
     <p class="lead">OurRadioFS is a virtual VHF radio for Microsoft Flight Simulator and X-Plane. Tune a COM frequency and speak to whoever is on it and in range — real radio distance, real fade-out, one shared sky. MSFS and X-Plane pilots share the same frequencies.</p>
     <div class="cta">
-      <a class="btn btn-primary" href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download free</a>
+      <a class="btn btn-primary" href="#download">Download free</a>
       <a class="btn btn-ghost" href="map.html">See the live map</a>
     </div>
     <a id="live-counter" class="live offline" href="map.html" title="See who's flying right now">
@@ -207,10 +227,41 @@
   <div class="center"><h2>Up and running in a minute</h2></div>
   <div class="wrap" style="padding:0">
   <div class="steps">
-    <div class="step"><div class="n">1</div><h3>Download &amp; install</h3><p>Grab the free installer from flightsim.to and run it. No account to create.</p></div>
+    <div class="step"><div class="n">1</div><h3>Download &amp; install</h3><p>Grab the free installer for your simulator and run it. No account to create.</p></div>
     <div class="step"><div class="n">2</div><h3>Set callsign &amp; PTT</h3><p>Pick your callsign and a push-to-talk key. That's the whole setup.</p></div>
     <div class="step"><div class="n">3</div><h3>Fly &amp; say hello</h3><p>Tune a COM frequency in the sim and talk to whoever's on it in range.</p></div>
   </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="center">
+    <h2>Download</h2>
+    <p class="muted">Pick your simulator. Free, no account, Windows 10/11.</p>
+  </div>
+  <div class="wrap" style="padding:0">
+  <div class="dl">
+
+    <!-- MSFS -->
+    <div class="card opt">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.1 2.1 0 0 0-3-3L13 8 4.8 6.2a.6.6 0 0 0-.6.9l3.6 5.4-2.1 2.1H3.5l-.7 1.4 3 1.4 1.4 3 1.4-.7v-2.2l2.1-2.1 5.4 3.6a.6.6 0 0 0 .9-.6Z"/></svg></div>
+      <h3>Microsoft Flight Simulator</h3>
+      <p class="sim">MSFS 2020 &amp; 2024 · in-cockpit panel included</p>
+      <a class="btn btn-primary" href="https://github.com/OurRadioFS/ourradiofs.github.io/releases/download/update/OurRadioFS-v1.5.1-MSFS.zip">Download for MSFS</a>
+      <p class="ver">v1.5.1 · ZIP · 48 MB</p>
+    </div>
+
+    <!-- X-Plane -->
+    <div class="card opt">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg></div>
+      <h3>X-Plane</h3>
+      <p class="sim">X-Plane 11 &amp; 12 · no plugin required</p>
+      <a class="btn btn-primary" href="https://github.com/OurRadioFS/ourradiofs.github.io/releases/download/update/OurRadioFS-v1.5.1-Xplane.zip">Download for X-Plane</a>
+      <p class="ver">v1.5.1 · ZIP · 48 MB</p>
+    </div>
+
+  </div>
+  <p class="dl-note">One app for both simulators: it connects to whichever one you are running, and MSFS and X-Plane pilots share the same frequencies.</p>
   </div>
 </section>
 
@@ -220,8 +271,7 @@
     <h2>Free, and kept alive by pilots</h2>
     <p class="muted" style="max-width:52ch;margin:0 auto 22px">OurRadioFS is built by a single developer and runs on a server that costs real money. If it makes your flights better, you can help keep it on the air.</p>
     <div class="cta" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
-      <a class="btn btn-primary" href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download free</a>
-      <a class="btn btn-ghost" href="https://ko-fi.com/ourradiofs" target="_blank" rel="noopener"><img src="https://storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png" alt="Ko-fi" style="height:16px;width:auto">Support on Ko-fi</a>
+      <a class="kofi" href="https://ko-fi.com/ourradiofs" target="_blank" rel="noopener"><img src="https://storage.ko-fi.com/cdn/brandasset/v2/support_me_on_kofi_badge_beige.png" alt="Support me on Ko-fi" width="672" height="356"></a>
     </div>
   </div>
   </div>
@@ -230,7 +280,7 @@
 <footer>
   <div class="wrap">
     <div class="fnav">
-      <a href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">Download</a>
+      <a href="#download">Download</a>
       <a href="map.html">Live map</a>
       <a href="https://ko-fi.com/ourradiofs" target="_blank" rel="noopener">Ko-fi</a>
       <a href="https://discord.gg/FG4xmEXppQ" target="_blank" rel="noopener">Discord</a>
