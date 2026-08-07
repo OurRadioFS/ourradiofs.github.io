@@ -152,8 +152,20 @@
   .dl .opt .sim{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 0 20px}
   .dl .opt .btn{width:100%;justify-content:center;margin-top:auto}
   .dl .opt .ver{font-family:var(--mono);font-size:11px;color:var(--muted);margin:12px 0 0}
-  .dl-note{text-align:center;font-size:13px;color:var(--muted);margin:22px auto 0;max-width:52ch}
   @media(max-width:720px){.dl{grid-template-columns:1fr}}
+
+  /* Franja de Ko-fi dentro de la sección de descarga. Horizontal y baja de altura
+     a propósito: tiene que caber en la misma pantalla que los botones. */
+  .support{display:flex;align-items:center;justify-content:center;gap:26px;flex-wrap:wrap;
+           background:radial-gradient(620px 320px at 50% 0%,rgba(232,163,61,.11),transparent 65%),var(--surface);
+           border:1px solid var(--border);border-radius:16px;padding:22px 28px;
+           max-width:760px;margin:30px auto 0;transition:border-color .3s ease}
+  .support .kofi img{width:158px}
+  .support .txt{max-width:42ch}
+  .support h3{font-size:16px;margin-bottom:5px}
+  .support p{font-size:13.5px;color:var(--muted);margin:0}
+  .support.thanks{border-color:rgba(232,163,61,.55)}
+  @media(max-width:640px){.support{flex-direction:column;text-align:center}}
 
   /* Chapa oficial de Ko-fi: la imagen ya trae sus esquinas redondeadas y su fondo,
      así que la sombra va con drop-shadow (respeta el alfa) y no con box-shadow. */
@@ -237,7 +249,7 @@
 <section id="download">
   <div class="center">
     <h2>Download</h2>
-    <p class="muted">Pick your simulator. Free, no account, Windows 10/11.</p>
+    <p class="muted">Pick your simulator — free, no account, Windows 10/11. It is one app for both: it connects to whichever sim you are running, and MSFS and X-Plane pilots share the same frequencies.</p>
   </div>
   <div class="wrap" style="padding:0">
   <div class="dl">
@@ -261,17 +273,13 @@
     </div>
 
   </div>
-  <p class="dl-note">One app for both simulators: it connects to whichever one you are running, and MSFS and X-Plane pilots share the same frequencies.</p>
-  </div>
-</section>
-
-<section>
-  <div class="wrap" style="padding:0">
-  <div class="cta-band">
-    <h2>Free, and kept alive by pilots</h2>
-    <p class="muted" style="max-width:52ch;margin:0 auto 22px">OurRadioFS is built by a single developer and runs on a server that costs real money. If it makes your flights better, you can help keep it on the air.</p>
-    <div class="cta" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
-      <a class="kofi" href="https://ko-fi.com/ourradiofs" target="_blank" rel="noopener"><img src="https://storage.ko-fi.com/cdn/brandasset/v2/support_me_on_kofi_badge_beige.png" alt="Support me on Ko-fi" width="672" height="356"></a>
+  <!-- La petición de Ko-fi va AQUÍ, no al final de la página: quien entra por
+       #download se lleva el ZIP y se va, y abajo no llegaba a verla nunca. -->
+  <div class="support" id="support">
+    <a class="kofi" href="https://ko-fi.com/ourradiofs" target="_blank" rel="noopener"><img src="https://storage.ko-fi.com/cdn/brandasset/v2/support_me_on_kofi_badge_beige.png" alt="Support me on Ko-fi" width="672" height="356"></a>
+    <div class="txt">
+      <h3 id="support-title">Free, and kept alive by pilots</h3>
+      <p>Built by a single developer, and running on a server that costs real money every month. If it makes your flights better, you can help keep it on the air.</p>
     </div>
   </div>
   </div>
@@ -311,6 +319,16 @@
     }
   }
   loadStatus(); setInterval(loadStatus,15000);
+
+  // Al pulsar una descarga, la franja de Ko-fi pasa a dar las gracias. El ZIP ya se
+  // está bajando (la página no se mueve), que es cuando la petición sienta bien.
+  document.querySelectorAll('#download .opt .btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=document.getElementById('support-title');
+      if(t) t.textContent='Thanks for downloading — help keep it on the air';
+      document.getElementById('support').classList.add('thanks');
+    });
+  });
 </script>
 </body>
 </html>
