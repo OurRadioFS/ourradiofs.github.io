@@ -189,6 +189,35 @@
 
     .leaflet-control-attribution a { color: var(--muted) !important; }
 
+    /* Aviso de cómo ver el aro de alcance. Va como control de Leaflet (no un div
+       suelto encima del mapa) para que respete el resto de controles: no se solapa
+       con el zoom (arriba a la izquierda) ni con la attribution (abajo a la derecha),
+       y se reposiciona solo si algún día se añade otro control en esa esquina. */
+    .range-hint {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 7px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 11px;
+      line-height: 1.3;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    }
+    .range-hint-row { display: flex; align-items: center; gap: 7px; }
+    .range-hint svg { flex: none; }
+    /* Fila 1, el aro: mismo trazo ámbar que el aro real, para que la relación entre
+       icono y función sea obvia de un vistazo. Fila 2, el clic: un cursor simple en
+       el color del texto normal, sin ámbar, porque no está ligado al aro. */
+    .range-hint-row:first-child svg circle { fill: none; stroke: var(--amber); stroke-width: 1.5; }
+    .range-hint-row:first-child svg circle:first-child { fill: var(--amber); stroke: none; }
+    .range-hint-row:last-child svg path { fill: var(--text); }
+    .range-hint b { color: var(--text); font-weight: 600; }
+
     /* COMPACT POPUP */
     .leaflet-popup-content-wrapper {
       padding: 0 !important;
@@ -402,6 +431,38 @@
         '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors ' +
         '&copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
     }).addTo(map);
+
+    // Aviso permanente con las dos formas de interactuar con un avión (hover → aro
+    // de alcance, clic → popup con los datos del vuelo). Sin la primera fila, quien no
+    // pase el ratón lo bastante quieto nunca ve el aro y da por hecho que no existe.
+    // Va en 'bottomleft' (única esquina libre: el zoom ocupa 'topleft' y la attribution
+    // 'bottomright') y se queda fijo, no es un aviso que se cierre solo, porque es la
+    // única pista de que esas dos interacciones existen.
+    (function () {
+      const RangeHint = L.Control.extend({
+        options: { position: 'bottomleft' },
+        onAdd: function () {
+          const div = L.DomUtil.create('div', 'range-hint');
+          div.innerHTML =
+            '<div class="range-hint-row">' +
+              '<svg width="16" height="16" viewBox="0 0 16 16">' +
+                '<circle cx="8" cy="8" r="2"></circle>' +
+                '<circle cx="8" cy="8" r="6.5"></circle>' +
+              '</svg>' +
+              'Hover over a plane for <b>1&nbsp;second</b> to see its radio range' +
+            '</div>' +
+            '<div class="range-hint-row">' +
+              '<svg width="16" height="16" viewBox="0 0 16 16">' +
+                '<path d="M4 2.5 12.5 8 8.5 8.7 10.7 12.9 9 13.8 6.8 9.6 4 12.2Z"></path>' +
+              '</svg>' +
+              '<b>Click</b> a plane for full flight details' +
+            '</div>';
+          L.DomEvent.disableClickPropagation(div);
+          return div;
+        }
+      });
+      map.addControl(new RangeHint());
+    })();
 
     // Etiquetas visibles solo con zoom alto (al acercar, los aviones ya están separados).
     // Al alejar → solo iconos, sin amontonar nombres. En cualquier zoom, el hover muestra
@@ -861,6 +922,5 @@
   </script>
 </body>
 </html>
-
 
 
