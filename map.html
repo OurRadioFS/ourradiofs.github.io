@@ -93,13 +93,21 @@
 
     /* AIRCRAFT MARKER */
     .plane-marker {
-      
+      /* absolute (no relative): Leaflet coloca cada marcador con transform; si es
+         relative, los marcadores se apilan en el flujo del documento y salen "en fila"
+         cuando dos aviones están en el mismo punto en vez de superponerse. */
       position: absolute;
       width: 80px;
       height: 42px;
     }
 
-   
+    /* La caja mide 80x42 pero el avión dibujado son 26x26 en el centro. Si la caja
+       entera captura el ratón, dos aviones cercanos se tapan entre ellos: apuntas al
+       dibujo de uno y el evento se lo lleva la caja TRANSPARENTE del vecino que esté
+       por encima, y ese avión no responde. Sensibles solo el dibujo y la etiqueta.
+       LA DOBLE CLASE ES OBLIGATORIA: Leaflet trae
+       `.leaflet-marker-icon.leaflet-interactive { pointer-events: auto }` y con un
+       solo `.plane-marker` le gana él por especificidad y esto no hace nada. */
     .plane-marker.leaflet-interactive {
       pointer-events: none;
     }
@@ -147,7 +155,10 @@
       display: none;            /* oculto por defecto: al alejar se amontonan */
     }
 
-   
+    /* Nombres solo al acercar el zoom (los aviones ya están separados) o al pasar el
+       ratón por encima. Al alejar se ven solo los iconos: limpio como FlightRadar. */
+    /* Aro de alcance VHF (al pasar el ratón). Solo el borde y tenue: con relleno
+       sólido tapaba el terreno y se comía a los demás aviones. */
     .range-ring { animation: ringIn .22s ease-out; }
     @keyframes ringIn { from { opacity: 0 } to { opacity: 1 } }
 
@@ -178,7 +189,10 @@
 
     .leaflet-control-attribution a { color: var(--muted) !important; }
 
-    
+    /* Aviso de cómo ver el aro de alcance. Va como control de Leaflet (no un div
+       suelto encima del mapa) para que respete el resto de controles: no se solapa
+       con el zoom (arriba a la izquierda) ni con la attribution (abajo a la derecha),
+       y se reposiciona solo si algún día se añade otro control en esa esquina. */
     .range-hint {
       display: flex;
       flex-direction: column;
@@ -196,7 +210,9 @@
     }
     .range-hint-row { display: flex; align-items: center; gap: 7px; }
     .range-hint svg { flex: none; }
-    
+    /* Fila 1, el aro: mismo trazo ámbar que el aro real, para que la relación entre
+       icono y función sea obvia de un vistazo. Fila 2, el clic: un cursor simple en
+       el color del texto normal, sin ámbar, porque no está ligado al aro. */
     .range-hint-row:first-child svg circle { fill: none; stroke: var(--amber); stroke-width: 1.5; }
     .range-hint-row:first-child svg circle:first-child { fill: var(--amber); stroke: none; }
     .range-hint-row:last-child svg path { fill: var(--text); }
@@ -218,7 +234,9 @@
       margin: 0 !important;
       width: max-content !important;
       min-width: 180px;
-      
+      /* TOPE DE ANCHO. Los aviones de mods traen nombres larguísimos ("Boeing 737-800
+         BBJ Winglets Ultimate Livery…"): sin tope, max-content estiraba el popup hasta
+         taparle media pantalla al usuario. Aquí se corta y el nombre se elide. */
       max-width: 260px !important;
     }
 
@@ -228,18 +246,24 @@
       font-family: var(--sans);
     }
 
-  
+    /* CABECERA: indicativo y avión en la misma línea, el avión justo al lado. */
     .flight-popup-header {
       display: flex;
       align-items: center;
       gap: 9px;
-      
+      /* El hueco de la derecha NO es decorativo: la X de cerrar de Leaflet va posicionada
+         en absoluto sobre la esquina superior derecha del popup (24x24 px en 1.9.4). Sin
+         reservarle sitio, la chapa del avión se le metía debajo. */
+      /* 7px arriba y abajo, no 10: con el indicativo a 17px la cabecera se iba a 40px de
+         alto y sobresalía sobre el pie (34px), que es lo que la hacía parecer hinchada.
+         Así las dos bandas miden lo mismo y enmarcan el cuerpo por igual. */
       padding: 7px 30px 7px 12px;
       background: rgba(255, 255, 255, 0.03);
       border-bottom: 1px solid var(--border);
     }
 
-    
+    /* El indicativo manda: es el dato con el que le llamas por radio. NO se encoge
+       (flex-shrink:0) → un nombre de avión largo YA NO lo corta; cede la chapa del avión. */
     .flight-popup-callsign {
       flex: 0 0 auto;
       min-width: 0;
@@ -254,7 +278,9 @@
       white-space: nowrap;
     }
 
-    
+    /* El avión va en su propia chapa para que se lea como un designador de tipo y no
+       como texto suelto; rima con la chapa COM1 del pie. Llega ya recortado desde JS,
+       así que no encoge: el hueco que ocupa es siempre acotado. */
     .flight-popup-aircraft {
       flex: 0 1 auto;
       min-width: 0;                /* cede primero: si no cabe, se encoge esta chapa, no el callsign */
@@ -273,7 +299,8 @@
     }
     .flight-popup-aircraft .acname {
       display: inline-block; white-space: nowrap;
-     
+      /* Corre solo mientras el popup está abierto (el chip solo existe entonces), y solo
+         si de verdad excede: min(0px, …) deja quieto lo que ya cabe. */
       animation: acScroll 4s ease-in-out infinite alternate;
     }
     @keyframes acScroll {
@@ -320,7 +347,10 @@
 
     .freq-box {
       display: flex;
-      
+      /* baseline, no center: son dos tipografías distintas (la chapa en sans a 10px, la
+         frecuencia en mono a 13px). Centrando las CAJAS, las letras quedan a alturas
+         distintas y se ve que "no están en la misma línea". Alineando las BASES, se
+         apoyan en el mismo renglón, que es lo que percibe el ojo. */
       align-items: baseline;
       gap: 7px;
     }
@@ -332,7 +362,8 @@
       color: var(--text);
       font-size: 10px;
       font-weight: 700;
-      
+      /* Ancho común para que COM1 y COM2 dejen sus frecuencias en la MISMA columna:
+         desalineadas una debajo de otra se nota mucho en una pila de números. */
       min-width: 44px;
       text-align: center;
     }
@@ -340,23 +371,35 @@
     .freq-value {
       color: var(--amber);
       font-family: var(--mono);
-      
+      /* 12 y no 13: con dual watch el pie pasa a tener DOS frecuencias, y a 13 pesaban
+         demasiado para lo que son — el dato principal del popup sigue siendo quién es y
+         dónde está, no el número. Con una sola radio la diferencia casi no se nota. */
       font-size: 12px;
       font-weight: 700;
     }
 
-    
+    /* Las dos radios, una debajo de otra. Con una sola contiene un único hijo y el pie
+       se ve exactamente igual que antes de existir el dual watch. */
     .freq-stack {
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
 
-    
+    /* La radio por la que NO está hablando, apagada. Se probó marcar la de TX con un punto
+       (como el ● del visor de la app) y se descartó: el punto es un elemento más en la
+       fila, así que ensanchaba la caja y con ella TODO el popup — 12 px que no pagan lo
+       que aportan. Atenuar no ocupa nada y dice lo mismo: la viva es donde habla.
+       Solo se aplica con dual watch; con una sola radio no hay nada con qué comparar. */
     .freq-idle .freq-value { opacity: .45; }
     .freq-idle .freq-label { opacity: .6; }
 
-    
+    /* Coordenadas del avión, discretas: N/S arriba, E/W abajo, a la derecha de la freq.
+       GRID de 2 columnas (hemisferio | valor), no flex-column: con flex cada línea medía
+       lo que ocupaba su propio texto y, como la longitud lleva 3 dígitos de grado y la
+       latitud solo 2, una quedaba visiblemente más larga que la otra. En grid, la columna
+       del hemisferio y la del valor comparten ancho fijo entre las dos filas, así que
+       hemisferios y números quedan en la misma vertical (y el punto decimal alineado). */
     .coord-box {
       display: grid;
       grid-template-columns: auto auto;
@@ -364,12 +407,15 @@
       font-family: var(--mono); font-size: 10px; line-height: 1.3;
       color: var(--muted); opacity: .7;
       font-variant-numeric: tabular-nums;
-      
+      /* Separador de la frecuencia: en el propio coord-box (no un elemento aparte)
+         para que el alto del trazo se ajuste solo al contenido, y con padding en vez
+         de margin para que la línea no quede pegada al texto de ningún lado. */
       padding-left: 10px;
       border-left: 1px solid var(--border);
     }
     .coord-box .hemi { text-align: left; }
-    
+    /* Alineado a la derecha: con la latitud rellenada a ancho de 3 caracteres (ver
+       fmtLat) las dos cifras miden lo mismo y el punto decimal cae en la misma columna. */
     .coord-box .coord-val { text-align: right; }
 
   </style>
@@ -409,7 +455,12 @@
         '&copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
     }).addTo(map);
 
-    /
+    // Aviso permanente con las dos formas de interactuar con un avión (hover → aro
+    // de alcance, clic → popup con los datos del vuelo). Sin la primera fila, quien no
+    // pase el ratón lo bastante quieto nunca ve el aro y da por hecho que no existe.
+    // Va en 'bottomleft' (única esquina libre: el zoom ocupa 'topleft' y la attribution
+    // 'bottomright') y se queda fijo, no es un aviso que se cierre solo, porque es la
+    // única pista de que esas dos interacciones existen.
     (function () {
       const RangeHint = L.Control.extend({
         options: { position: 'bottomleft' },
@@ -436,7 +487,9 @@
       map.addControl(new RangeHint());
     })();
 
-   
+    // Etiquetas visibles solo con zoom alto (al acercar, los aviones ya están separados).
+    // Al alejar → solo iconos, sin amontonar nombres. En cualquier zoom, el hover muestra
+    // el nombre de un avión concreto. Sin ocultar ni mover nada: puro CSS por nivel de zoom.
     const LABEL_ZOOM = 7;
     function updateLabelVisibility() {
       map.getContainer().classList.toggle('show-tags', map.getZoom() >= LABEL_ZOOM);
@@ -444,7 +497,9 @@
     map.on('zoomend', updateLabelVisibility);
     updateLabelVisibility();
 
-    
+    // Popup pegado al borde: se cortaba. El autoPan de Leaflet no ajusta bien con contenido
+    // custom (corre antes de conocer el tamaño del popup). Al abrir uno, tras el layout, si
+    // sobresale del contenedor paneamos lo justo para que quepa entero (con margen).
     map.on('popupopen', function (e) {
       setTimeout(function () {
         const el = e.popup.getElement();
@@ -481,11 +536,20 @@
       });
     }
 
-   
+    // POPUP
+    // Tope de caracteres del nombre del avión. Sale de la cuenta del ancho: 260 px de
+    // popup, menos el indicativo, menos el hueco de la X. Si se sube, el popup empieza
+    // a crecer y a bailar de tamaño según quién esté volando.
     const AIRCRAFT_MAX_CHARS = 16;
 
     function popupHtml(pilot) {
-     
+      // Si no sabemos el avión no pintamos una chapa con un guion dentro: se queda
+      // solo el indicativo, que se lee mejor que un hueco relleno de nada.
+      //
+      // TOPE DE CARACTERES. Los aviones de mods traen nombres larguísimos ("Boeing
+      // 737-800 BBJ Winglets Ultimate Livery Pack"). Se cortan aquí, en el dato, y no
+      // solo con CSS: así el ancho de la cabecera es PREVISIBLE y el popup no baila de
+      // tamaño según quién esté volando. El nombre entero queda en el title.
       const aircraft = pilot.aircraft != null ? String(pilot.aircraft).trim() : '';
       const aircraftShort =
         aircraft.length > AIRCRAFT_MAX_CHARS
@@ -510,9 +574,15 @@
           : '—';
 
       const frequency = fmtFreq(pilot.freq);
-   
+      // Segunda radio (dual watch). Cada una con su nombre real, COM1 y COM2, igual que
+      // en la app: al piloto que mira el mapa le sirve para saber dónde llamar, y
+      // llamarlas de otra forma solo le obligaría a traducir.
+      // Solo aparece si viene: con una sola radio, con la COM2 muda, con las dos en la
+      // misma frecuencia o con una app anterior llega null, y el pie se queda tal cual.
       const hasCom2 = pilot.freq2 != null && pilot.freq2 > 0;
-    
+      // Por cuál está HABLANDO. Sin el dato (app vieja) se asume la COM1, que es donde
+      // habla todo el mundo. La OTRA se pinta apagada — ver .freq-idle: se descartó
+      // marcarla con un punto porque ensanchaba el popup.
       const txRadio = pilot.tx === 2 ? 2 : 1;
       const idle = n => hasCom2 && txRadio !== n ? ' freq-idle' : '';
       const freq2 = hasCom2
@@ -565,7 +635,10 @@
       `;
     }
 
-    
+    // HELPERS
+    // Escapa también COMILLAS, no solo <&>: el nombre del avión ahora va dentro de un
+    // atributo (title="..."), y ahí una comilla suelta cerraría el atributo y dejaría
+    // inyectar HTML. El nombre lo manda el cliente, así que no es dato de confianza.
     function esc(value) {
       return (value == null ? '' : String(value)).replace(/[<&>"']/g, function (character) {
         return { '<': '&lt;', '&': '&amp;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
@@ -582,10 +655,15 @@
       return Math.round(altitude).toLocaleString('en-US');
     }
 
-    
+    // Formato aeronáutico: latitud con 2 dígitos de grado, longitud con 3 (0 delante).
+    // El hemisferio va en su span para separarlo del número con un margen FIJO (no el
+    // espacio mono, que quedaba demasiado ancho).
     function fmtLat(v) {
       var p = Math.abs(v).toFixed(4).split('.');
-     
+      // Grado a 2 dígitos (la latitud no pasa de 90°) PERO relleno hasta 3 caracteres
+      // con un espacio fijo (no un "0" inventado): así el valor mide lo mismo que el
+      // de longitud y el punto decimal cae en la misma columna del grid, sin falsear
+      // el dato con un dígito que no existe.
       return '<span class="hemi">' + (v >= 0 ? 'N' : 'S') + '</span>' +
         '<span class="coord-val">' + p[0].padStart(3, '\u00A0') + '.' + p[1] + '°</span>';
     }
@@ -599,7 +677,17 @@
     const markers = {};
     const REFRESH_MS = 5000;
 
-  
+    // ── ARO DE ALCANCE VHF (al pasar el ratón por un avión) ─────────────────
+    // MISMA FÓRMULA QUE LA APP, no una aproximación: MumbleAudioEngine.cs calcula
+    // el horizonte de radio como 1.23·(√alt_propia + √alt_peer) en NM con las
+    // alturas en pies, y da voz limpia hasta el 75% de esa distancia. Si algún día
+    // se toca allí, hay que tocarlo aquí o el mapa mentirá.
+    //
+    // El RADIO DEL ARO se dibuja contra una estación a nivel del suelo (10 ft),
+    // porque el alcance real depende de las DOS altitudes y un avión no tiene un
+    // radio único. Así el aro es el mínimo garantizado: todo lo que cae dentro le
+    // oye seguro. El apagado en gris de los demás aviones sí es exacto, ese va
+    // par a par con las dos alturas reales.
     const last = {};          // último dato recibido de cada indicativo
     let rings = [];           // aros pintados ahora mismo
     let ringsFor = null;      // de qué avión son, para moverlos en vez de recrearlos
@@ -610,14 +698,18 @@
 
     const NM_TO_M = 1852;
     const GROUND_FT = 10;
-   
+    // El aro no sale al instante: hay que dejar el ratón quieto encima este rato. Así
+    // el que solo va a pulsar para ver el popup no lo ve nunca, y cruzar el mapa por
+    // encima de varios aviones no va encendiendo aros por el camino. Si se hace lento,
+    // 600 ms es un buen punto: un clic se suele hacer en 300-400 ms.
     const RANGE_HOVER_MS = 1000;
 
     function rangeNm(aFt, bFt) {
       return 1.23 * (Math.sqrt(Math.max(aFt, 10)) + Math.sqrt(Math.max(bFt, 10)));
     }
 
-   
+    // Cuántos píxeles de pantalla ocupa una distancia en metros, aquí y ahora. Se mide
+    // sobre el paralelo (este-oeste), que es donde la proyección Mercator no deforma.
     function radioEnPixeles(lat, lon, metros) {
       const dLon = metros / (111320 * Math.cos(lat * Math.PI / 180));
       const a = map.latLngToContainerPoint([lat, lon]);
@@ -631,7 +723,9 @@
       ringsFor = null;
     }
 
-    
+    // Repinta el aro según el estado actual. Las TRES condiciones para que se vea
+    // (hay un avión señalado, no hay popup abierto y el aro cabe en pantalla) están
+    // aquí y en ningún otro sitio, así que quien la llame no tiene que comprobar nada.
     function paintRange() {
       Object.keys(markers).forEach(function (cs) {
         const el = markers[cs].getElement();
@@ -649,7 +743,14 @@
       const rFade  = rangeNm(p.alt, GROUND_FT);
       const rClear = rFade * 0.75;
 
-      
+      // Y tampoco se pinta si el aro NO CABE en la pantalla: acercando mucho solo se
+      // vería un arco cruzando el mapa, que no dice nada. No vale un zoom máximo fijo
+      // porque el tamaño depende de la altitud (un airliner a FL350 son 234 NM y una
+      // avioneta a 1.500 ft son 50), así que se mide el radio real en píxeles y se
+      // compara con la media diagonal del mapa.
+      // El límite es un CUARTO de la diagonal. Cada nivel de zoom dobla el radio en
+      // píxeles, así que pasar de la mitad al cuarto es exactamente quitarle un punto
+      // de zoom: con la mitad se seguía viendo demasiado cerca.
       const size = map.getSize();
       const limite = Math.sqrt(size.x * size.x + size.y * size.y) / 4;
       if (radioEnPixeles(p.lat, p.lon, rClear * NM_TO_M) > limite) {
@@ -658,7 +759,10 @@
       }
 
       if (rings.length === 2 && ringsFor === callsign) {
-      
+        // MOVER, NO RECREAR. El avión se actualiza cada 5 s y si aquí se borraran los
+        // círculos para volver a crearlos, se repetiría la animación de entrada y el
+        // aro daría un parpadeo en cada refresco. Cambiándoles centro y radio se
+        // desplazan sin pestañear (y el radio se recalcula: si el avión sube, crece).
         rings.forEach(function (r) { r.setLatLng([p.lat, p.lon]); });
         rings[0].setRadius(rFade * NM_TO_M);
         rings[1].setRadius(rClear * NM_TO_M);
@@ -678,7 +782,7 @@
         ringsFor = callsign;
       }
 
-     
+      // Quién queda fuera de su alcance. Par a par, con las dos altitudes.
       Object.keys(markers).forEach(function (cs) {
         const el = markers[cs].getElement();
         const q = last[cs];
@@ -695,10 +799,12 @@
       paintRange();
     }
 
-    
+    // Espera de intención: arranca la cuenta atrás al entrar en un avión. Si el ratón
+    // se va antes, no llega a salir nada.
     function armRange(callsign) {
       cancelRange();
-      
+      // Al saltar de un avión a otro, el aro del anterior se apaga ya: el que se ve
+      // tiene que ser siempre el del avión que estás señalando.
       if (hovered && hovered !== callsign) clearRange();
       pending = callsign;
       hoverTimer = setTimeout(function () {
@@ -717,7 +823,12 @@
     map.on('popupopen',  function () { cancelRange(); popupOpen = true;  paintRange(); });
     map.on('popupclose', function () { popupOpen = false; paintRange(); });
 
-    
+    // El aro solo aparece señalando un avión con el ratón (se enciende siempre, en
+    // cualquier zoom, mientras quepa en pantalla — ver paintRange).
+    // Dónde está el puntero. Hace falta porque al hacer ZOOM los aviones se mueven
+    // bajo el cursor: salta un `mouseout` y ya no entra ningún `mouseover` nuevo (el
+    // ratón no se ha movido), así que sin esto el aro no volvía a salir hasta que
+    // movías el ratón. Tras cada zoom se mira a mano qué hay debajo.
     let punteroXY = null;
     map.getContainer().addEventListener('mousemove', function (e) {
       punteroXY = [e.clientX, e.clientY];
@@ -737,12 +848,13 @@
     map.on('zoomend', function () {
       paintRange();
 
-      
+      // ¿Ha quedado un avión debajo del ratón? Se rearma la espera como si acabaras
+      // de entrar en él: la regla del segundo sigue valiendo igual.
       const cs = avionBajoElPuntero();
       if (cs && hovered !== cs && pending !== cs) armRange(cs);
     });
 
-  
+    // Si cambia el tamaño de la ventana cambia si el aro cabe o no.
     map.on('resize', paintRange);
 
     function render(pilots) {
@@ -755,7 +867,10 @@
 
         const callsign = pilot.callsign;
         const lat = Number(pilot.lat), lon = Number(pilot.lon);
-       
+        // Ignora posiciones basura con lat≈0 (Null Island / ecuador, frente a África):
+        // MSFS reporta (0,0), (0,90) y variantes al cargar; TODAS tienen lat≈0 (por eso el
+        // "en vuelo" de la app se basa en lat≠0). Una lectura mala teletransportaría el
+        // avión al ecuador; se mantiene el marcador en su última posición buena.
         if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) < 0.02) {
           if (markers[callsign]) { seen[callsign] = true; }
           return;
@@ -764,11 +879,16 @@
 
         const marker = markers[callsign];
 
+        // Guardamos el último dato de cada uno: el aro necesita la altitud del
+        // avión y la de los demás para saber a quién alcanza.
         last[callsign] = pilot;
 
         if (marker) {
           marker.setLatLng([lat, lon]);
-          
+          // OJO: aquí el mapa de producción llama a setIcon(), que RECONSTRUYE el
+          // DOM del avión cada 5 s. Si el ratón está encima justo en ese momento,
+          // el mouseout no llega nunca y el aro se queda pegado. Se gira el
+          // elemento que ya existe y no se recrea nada.
           const el = marker.getElement();
           const plane = el && el.querySelector('.plane');
           if (plane) plane.style.transform = 'rotate(' + (Number(pilot.heading) || 0) + 'deg)';
@@ -783,9 +903,15 @@
             .bindPopup(popupHtml(pilot), { autoPan: false, keepInView: false });
 
           m.on('mouseover', function () { armRange(callsign); });
-        
+          // El mouseout SOLO borra si el aro sigue siendo suyo. Dos aviones juntos
+          // se solapan (el divIcon mide 80x42, mucho más que el dibujo), así que al
+          // pasar de uno a otro llega el mouseover del segundo ANTES que el mouseout
+          // del primero — y sin esta guarda, el del primero borraba el aro recién
+          // pintado del segundo y parecía que el hover no respondía.
           m.on('mouseout',  function () {
-         
+            // Cada avión solo cancela LO SUYO. Con las cajas solapadas, el mouseout de
+            // uno llega después del mouseover del vecino: si cancelara sin mirar, se
+            // cargaría la cuenta atrás recién armada del otro y su aro no saldría nunca.
             if (pending === callsign) cancelRange();
             if (hovered === callsign) clearRange();
           });
@@ -799,13 +925,15 @@
           map.removeLayer(markers[callsign]);
           delete markers[callsign];
           delete last[callsign];
-          
+          // Si el que se va es el que tenía el ratón encima, fuera su aro (y fuera la
+          // cuenta atrás): si no, se quedaría flotando sobre un avión que ya no está.
           cancelRange();
           if (hovered === callsign) clearRange();
         }
       });
 
-      
+      // El avión se mueve cada 5 s: si sigue habiendo un aro puesto, se repinta en
+      // su sitio nuevo (y con el radio recalculado, que la altitud habrá cambiado).
       if (hovered) paintRange();
     }
 
@@ -837,7 +965,6 @@
   </script>
 </body>
 </html>
-
 
 
 
