@@ -1,5 +1,5 @@
 Privacy Policy — OurRadioFS
-Last updated: 4 August 2026
+Last updated: 14 August 2026
 OurRadioFS is designed to collect the bare minimum. There are no accounts, no
 sign-up, no email and no tracking. This policy explains the little data that is
 involved and why.
