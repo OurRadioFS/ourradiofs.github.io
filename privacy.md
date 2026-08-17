@@ -19,15 +19,25 @@ shared with the other pilots connected to the service so the app can work out wh
 close enough to hear you, which is the whole point of a VHF radio. Along with it go
 the frequencies you are tuned to and your aircraft type. If your aircraft has two
 radios and you listen to both, both frequencies are involved.
-The live map (optional, off by default)
-If — and only if — you tick "Show me on the live map" in Settings, the following is
-also published to a public map so other pilots can find someone to fly with:
+The live map (on by default, and you can turn it off)
+While you are flying, the following is published to a public map so other pilots can
+find someone to fly with:
 your callsign, aircraft type and the frequencies you are tuned to — both, if you fly
 with two radios — including which one you transmit on;
 your simulated aircraft's position, heading, ground speed and vertical speed.
-It is off by default, you can turn it off at any time, and you then disappear from
-the map within about two minutes. Leave it off and none of this is ever published: your
-position is then only used to work out radio range.
+Since version 1.6.0 this is on by default. It used to be off unless you ticked it.
+We changed it because a map that looks empty makes people think nobody is on the air,
+when in fact there are pilots flying — and finding someone to talk to is the whole point
+of the app. This is also how VATSIM, IVAO and similar services work.
+Nobody is switched on silently. The choice is shown to you when you first run the
+app, in the same notice where you accept the terms, with a box you can untick right
+there. Because this change affects what is published about you, everyone who already had
+the app is shown that notice again on updating — so if you would rather not appear, you
+decide before anything is published.
+You can also turn it off at any time in Settings ("Show me on the live map"), and you
+then disappear from the map within about two minutes. With it off, none of this is ever
+published: your position is then only used to work out radio range.
+The map is public: anyone can open it, without an account.
 What stays on your device / what we do NOT do
 We do not record or store audio. Voice is relayed live and disappears.
 We do not collect email, names or accounts. There is no registration.
