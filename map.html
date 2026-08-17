@@ -59,7 +59,6 @@
     .brand img { width: 26px; height: 26px; }
 
     header .links {
-      margin-left: auto;
       display: flex;
       align-items: center;
       gap: 20px;
@@ -68,6 +67,38 @@
 
     header .links a { color: var(--text); }
     header .links a:hover { color: var(--title); }
+
+    /* Empuja el contador y los enlaces a la derecha. Es un elemento propio en vez de
+       un 'margin-left:auto' en los enlaces porque el contador APARECE Y DESAPARECE:
+       con el margen en los enlaces, al ocultarse el contador se perdía el empuje. */
+    header .spacer { flex: 1; }
+
+    /* Cuántos pilotos hay en el mapa. Mismo lenguaje que la frecuencia (mono + ámbar).
+       La raya vertical lo separa de la navegación: a la izquierda estado, a la derecha
+       enlaces. Se oculta ENTERO (raya incluida) cuando no hay nadie — ver updateCount. */
+    .online {
+      display: flex;
+      align-items: center;
+      /* Altura fija para la raya: sin esto valdría lo que mida el texto (~15 px) y
+         quedaría raquítica. Corta y centrada, no de borde a borde de la barra. */
+      height: 24px;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      border-right: 2px solid var(--border);
+      /* El aire a los dos lados de la raya es lo que hace que se lean como dos
+         grupos (estado | navegación) y no como una fila de cosas sueltas. Sale
+         simétrico: 26 px a la izquierda de la raya, y 14 + los 12 del gap del
+         header a la derecha. Si se toca uno, tocar el otro. */
+      padding-right: 26px;
+      margin-right: 14px;
+    }
+
+    .online[hidden] { display: none; }
+    .online .dot { width: 7px; height: 7px; border-radius: 50%; background: #3FB950; }
+    .online .n { color: var(--amber); }
+    .online .sep { color: var(--muted); }
 
     .btn {
       display: inline-flex;
@@ -427,6 +458,13 @@
       <img src="assets/logo.png" alt="">
       OurRadioFS
     </a>
+    <span class="spacer"></span>
+    <!-- Arranca oculto: hasta que no llega el primer /map/data no se sabe cuánta gente
+         hay, y NUNCA se enseña un "0". Si no hay nadie, esto no existe. -->
+    <div class="online" id="online" hidden>
+      <span class="dot"></span>
+      <span id="online-text"></span>
+    </div>
     <nav class="links">
       <a href="index.html">Home</a>
       <a href="https://discord.gg/FG4xmEXppQ" target="_blank" rel="noopener">Discord</a>
@@ -857,7 +895,7 @@
     // Si cambia el tamaño de la ventana cambia si el aro cabe o no.
     map.on('resize', paintRange);
 
-    function render(pilots) {
+    function render(pilots, online) {
       const seen = {};
 
       pilots.forEach(function (pilot) {
@@ -935,6 +973,44 @@
       // El avión se mueve cada 5 s: si sigue habiendo un aro puesto, se repinta en
       // su sitio nuevo (y con el radio recalculado, que la altitud habrá cambiado).
       if (hovered) paintRange();
+
+      // 'seen' son exactamente los aviones que quedan en el mapa, así que el número
+      // no puede desmentir a lo que se ve. Se actualiza aquí mismo, en el momento en
+      // que llegan los datos: sin animación de conteo ni transición CSS, porque un
+      // número que tarda en ponerse al día es un número que miente un rato.
+      updateCount(Object.keys(seen).length, online);
+    }
+
+    // Dos números con significados distintos:
+    //   onMap  = aviones pintados ahora mismo (los que ACTIVARON "Show me on the map").
+    //   online = gente conectada de verdad, que la sabe Murmur, no el mapa.
+    // Se enseñan los dos porque si no, el contador infravalora la red: quien no quiere
+    // salir en el mapa es invisible aquí. Y de paso se ve que hay gente que elige no
+    // aparecer y se le respeta.
+    //
+    // NUNCA se enseña un "0": si no hay nadie, el bloque entero (raya incluida)
+    // desaparece y la barra queda como si esto no existiera. Decir "0 pilots" es
+    // exacto y a la vez el peor cartel posible para quien llega por primera vez.
+    function updateCount(onMap, online) {
+      const box = document.getElementById('online');
+
+      // Si no se pudo preguntar a Murmur (online null), se enseña solo lo que se ve:
+      // mejor un número corto y cierto que dos con uno inventado. El Math.max es un
+      // seguro: un 'online' rezagado NUNCA puede decir menos que los aviones pintados.
+      const hasOnline = typeof online === 'number' && isFinite(online) && online >= 0;
+      const total = hasOnline ? Math.max(online, onMap) : onMap;
+
+      if (total < 1) { box.hidden = true; return; }
+
+      // Si coinciden no hay nada que explicar → un solo número, sin etiquetas.
+      // "on map" solo aparece cuando hace falta: cuando hay más gente que aviones.
+      document.getElementById('online-text').innerHTML =
+        total === onMap
+          ? '<span class="n">' + total + '</span> ' + (total === 1 ? 'pilot' : 'pilots')
+          : '<span class="n">' + total + '</span> online <span class="sep">·</span> ' +
+            '<span class="n">' + onMap + '</span> on map';
+
+      box.hidden = false;
     }
 
     // DATA
@@ -953,7 +1029,11 @@
           : Array.isArray(data.pilots) ? data.pilots
           : [];
 
-        render(pilots);
+        // 'online' solo viene en la forma nueva (objeto). Con un agregador viejo que
+        // aún devuelva la lista pelada llega undefined y el contador enseña solo los
+        // aviones del mapa, como antes: la web nueva no depende de desplegar el VPS.
+        render(pilots, (data && typeof data === 'object' && !Array.isArray(data))
+                         ? data.online : undefined);
       } catch (error) {
         console.error('Error loading pilots:', error);
         render([]);
@@ -965,6 +1045,9 @@
   </script>
 </body>
 </html>
+
+
+
 
 
 
