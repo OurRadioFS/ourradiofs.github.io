@@ -155,7 +155,6 @@
       width: 26px;
       height: 26px;
       color: var(--amber);
-      filter: drop-shadow(0 0 5px rgba(232, 163, 61, 0.55));
       transform-origin: center center;
       display: flex;
       align-items: center;
@@ -195,7 +194,6 @@
 
     /* Los que quedan fuera del alcance del avión señalado, apagados. */
     .plane-marker.out .plane { color: #4c545e; }
-    .plane-marker.out .plane svg { filter: none; }
     .plane-marker.out .tag { color: #6E7681; }
     .plane-marker.sel .plane { color: #fff; }
     .plane-marker.sel .plane svg { filter: drop-shadow(0 0 9px rgba(255,255,255,.85)); }
@@ -1045,10 +1043,5 @@
   </script>
 </body>
 </html>
-
-
-
-
-
 
 
