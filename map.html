@@ -195,8 +195,10 @@
     /* Los que quedan fuera del alcance del avión señalado, apagados. */
     .plane-marker.out .plane { color: #4c545e; }
     .plane-marker.out .tag { color: #6E7681; }
+    /* El señalado se distingue por el COLOR (blanco contra el ámbar del resto y el gris
+       de los que quedan fuera de alcance), sin ningún halo. Llevaba un drop-shadow
+       blanco y se quitó por lo mismo que el ámbar: el color ya lo separa de sobra. */
     .plane-marker.sel .plane { color: #fff; }
-    .plane-marker.sel .plane svg { filter: drop-shadow(0 0 9px rgba(255,255,255,.85)); }
 
     #map.show-tags .plane-marker .tag { display: block; }
     .plane-marker:hover .tag { display: block; }
