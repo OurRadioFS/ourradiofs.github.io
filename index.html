@@ -67,7 +67,7 @@
      mono del número, y bailaba entre 41,6 y 43,2 según hubiera cifra o no — al lado del
      botón, ese pixel y medio se nota. Con height fijo y align-items:center da igual lo
      que lleve dentro. box-sizing:border-box es global, así que 42 son 42 con borde. */
-  .live{margin-top:22px;display:inline-flex;align-items:center;gap:12px;height:42px;line-height:1;
+  .live{display:inline-flex;align-items:center;gap:12px;height:42px;line-height:1;
         background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 16px;
         transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
   .live:hover{border-color:rgba(232,163,61,.45);box-shadow:0 10px 26px rgba(0,0,0,.35);transform:translateY(-1px)}
@@ -206,24 +206,25 @@
     <span class="tag">MSFS 20/24 & X-Plane 11/12</span>
     <h1>Talk to the pilots flying around you.</h1>
     <p class="lead">OurRadioFS is a virtual VHF radio for Microsoft Flight Simulator and X-Plane. Tune a COM frequency and speak to whoever is on it and in range — real radio distance, real fade-out, one shared sky. MSFS and X-Plane pilots share the same frequencies.</p>
-    <!-- UN solo botón. El "See the live map" que había aquí se quitó: el contador de
-         abajo lleva al mismo sitio y además dice cuánta gente hay, así que el botón
-         era un tercer enlace al mapa en la misma pantalla (con el del menú) que solo
-         le restaba peso al de descarga. -->
+    <!-- Botón y contador en la MISMA fila. El "See the live map" que había aquí se
+         quitó: el contador lleva al mismo sitio y además dice cuánta gente hay, así que
+         el botón era un tercer enlace al mapa en la misma pantalla (con el del menú) y
+         solo le restaba peso al de descarga. Los dos miden 42 px de alto para que la
+         fila quede a ras; en móvil el .cta hace wrap y el contador cae debajo solo. -->
     <div class="cta">
       <a class="btn btn-primary" href="#download">Download free</a>
+      <a id="live-counter" class="live offline" href="map.html" title="See who's flying right now">
+        <span class="dot"></span>
+        <!-- UN solo número. Hubo un segundo contador de frecuencias distintas y se
+             quitó: quien está en la portada aún no tiene la app y no puede sintonizar
+             ninguna, y con números pequeños "3 pilots · 2 frequencies" se lee como
+             "hay gente, pero dispersa" — convierte una señal buena en una matizada. -->
+        <span class="online">
+          <b id="lc-pilots">0</b> <span class="lbl">pilots</span>
+        </span>
+        <span class="offcta">See who's flying on the live map <span class="arr">&#8594;</span></span>
+      </a>
     </div>
-    <a id="live-counter" class="live offline" href="map.html" title="See who's flying right now">
-      <span class="dot"></span>
-      <!-- UN solo número. Hubo un segundo contador de frecuencias distintas y se
-           quitó: quien está en la portada aún no tiene la app y no puede sintonizar
-           ninguna, y con números pequeños "3 pilots · 2 frequencies" se lee como
-           "hay gente, pero dispersa" — convierte una señal buena en una matizada. -->
-      <span class="online">
-        <b id="lc-pilots">0</b> <span class="lbl">pilots</span>
-      </span>
-      <span class="offcta">See who's flying on the live map <span class="arr">&#8594;</span></span>
-    </a>
   </div>
 
   <img src="assets/ORFS7.png" alt="Interfaz de OurRadioFS" style="max-width:320px; width:80%; margin:0 auto; display:block; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.5); border:1px solid var(--border);">
