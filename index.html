@@ -62,23 +62,30 @@
   @media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:48px}.hero h1{font-size:34px}}
 
   /* Live counter */
-  .live{margin-top:30px;display:inline-flex;align-items:center;gap:12px;
-        background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;
+  /* ALTO FIJO, el mismo que el botón de descarga. Se pone a mano en vez de dejarlo
+     salir del padding porque el alto lo acababa mandando la caja de línea de la fuente
+     mono del número, y bailaba entre 41,6 y 43,2 según hubiera cifra o no — al lado del
+     botón, ese pixel y medio se nota. Con height fijo y align-items:center da igual lo
+     que lleve dentro. box-sizing:border-box es global, así que 42 son 42 con borde. */
+  .live{margin-top:22px;display:inline-flex;align-items:center;gap:12px;height:42px;line-height:1;
+        background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 16px;
         transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
   .live:hover{border-color:rgba(232,163,61,.45);box-shadow:0 10px 26px rgba(0,0,0,.35);transform:translateY(-1px)}
   .live .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:none}
   .live.offline .dot{background:var(--amber);box-shadow:0 0 8px rgba(232,163,61,.6)}
-  .live b{color:var(--title);font-family:var(--mono);font-size:20px}
+  .live b{color:var(--title);font-family:var(--mono);font-size:15px;line-height:1}
   .live .lbl{font-size:13px;color:var(--muted)}
   .live .sep{color:var(--border);margin:0 4px}
   .live .arr{color:var(--amber);display:inline-block;transition:transform .16s ease}
   .live:hover .arr{transform:translateX(4px)}
-  /* Alterna números (online) y llamada al mapa (offline) sin dejar huecos vacíos */
+  /* El número solo existe si hay gente; la llamada al mapa está SIEMPRE. Sin ella,
+     con pilotos conectados quedaba un número suelto que no parecía pulsable y no
+     invitaba a nada. El texto de la llamada lo ajusta el JS según el caso. */
   .live .online{display:none}
   .live.offline .online{display:none}
   .live:not(.offline) .online{display:inline}
   .live .offcta{display:inline;font-size:14px;color:var(--text);font-weight:500}
-  .live:not(.offline) .offcta{display:none}
+  .live:not(.offline) .offcta{color:var(--muted);font-weight:400}
 
   /* Radio mock */
   .radio{background:linear-gradient(#12161d,#0c1015);border:1px solid var(--border);
@@ -129,7 +136,6 @@
              border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
   .card .ico svg{width:22px;height:22px}
   .card:hover .ico{border-color:rgba(232,163,61,.55);background:rgba(232,163,61,.1)}
-  .new{font-size:10px;font-weight:700;color:#1a1205;background:var(--amber);border-radius:5px;padding:1px 6px;margin-left:8px;vertical-align:2px}
 
   .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
   .step .n{font-family:var(--mono);font-size:17px;color:var(--amber);margin-bottom:14px;
@@ -200,16 +206,21 @@
     <span class="tag">MSFS 20/24 & X-Plane 11/12</span>
     <h1>Talk to the pilots flying around you.</h1>
     <p class="lead">OurRadioFS is a virtual VHF radio for Microsoft Flight Simulator and X-Plane. Tune a COM frequency and speak to whoever is on it and in range — real radio distance, real fade-out, one shared sky. MSFS and X-Plane pilots share the same frequencies.</p>
+    <!-- UN solo botón. El "See the live map" que había aquí se quitó: el contador de
+         abajo lleva al mismo sitio y además dice cuánta gente hay, así que el botón
+         era un tercer enlace al mapa en la misma pantalla (con el del menú) que solo
+         le restaba peso al de descarga. -->
     <div class="cta">
       <a class="btn btn-primary" href="#download">Download free</a>
-      <a class="btn btn-ghost" href="map.html">See the live map</a>
     </div>
     <a id="live-counter" class="live offline" href="map.html" title="See who's flying right now">
       <span class="dot"></span>
+      <!-- UN solo número. Hubo un segundo contador de frecuencias distintas y se
+           quitó: quien está en la portada aún no tiene la app y no puede sintonizar
+           ninguna, y con números pequeños "3 pilots · 2 frequencies" se lee como
+           "hay gente, pero dispersa" — convierte una señal buena en una matizada. -->
       <span class="online">
         <b id="lc-pilots">0</b> <span class="lbl">pilots</span>
-        <span class="sep">·</span>
-        <b id="lc-freqs">0</b> <span class="lbl">frequencies now</span>
       </span>
       <span class="offcta">See who's flying on the live map <span class="arr">&#8594;</span></span>
     </a>
@@ -227,10 +238,10 @@
     <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M7.76 16.24a6 6 0 0 1 0-8.48M16.24 7.76a6 6 0 0 1 0 8.48M4.93 19.07a10 10 0 0 1 0-14.14M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></div><h3>Real VHF range</h3><p>Who you hear depends on distance and altitude, computed live — just like a real radio. Fly higher, reach further.</p></div>
     <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div><h3>Tune &amp; talk</h3><p>Set your COM1 frequency in the sim, hold your push-to-talk key, and you're on the air with everyone on that frequency.</p></div>
     <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l2.5-7 4 14 2.5-9 1.8 2h6.2"/></svg></div><h3>Radio static</h3><p>Voices crackle and fade as pilots drift to the edge of range, so the airwaves feel alive instead of pin-sharp.</p></div>
-    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.93 16.07a10 10 0 0 1 0-8.14M7.76 13.9a6 6 0 0 1 0-3.8M16.24 10.1a6 6 0 0 1 0 3.8M19.07 7.93a10 10 0 0 1 0 8.14"/><circle cx="12" cy="12" r="1.5"/><path d="M12 13.5V22M9 22h6"/></svg></div><h3>NAV1 Morse ident <span class="new">1.3</span></h3><p>Hear the VOR/ILS identifier loud and clear over the engines, with a blinking Morse light on the display.</p></div>
-    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 3 3v15l6 3 6-3 6 3V6l-6-3-6 3Z"/><path d="M9 6v15M15 3v15"/></svg></div><h3>Live map <span class="new">1.5</span></h3><p>Optional and off by default: switch it on to share your position, and see who's flying and on which frequency. Find someone to fly with, then tune in. <a href="map.html" class="amber">Open the map →</a></p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.93 16.07a10 10 0 0 1 0-8.14M7.76 13.9a6 6 0 0 1 0-3.8M16.24 10.1a6 6 0 0 1 0 3.8M19.07 7.93a10 10 0 0 1 0 8.14"/><circle cx="12" cy="12" r="1.5"/><path d="M12 13.5V22M9 22h6"/></svg></div><h3>NAV1 Morse ident</h3><p>Hear the VOR/ILS identifier loud and clear over the engines, with a blinking Morse light on the display.</p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6 3 3v15l6 3 6-3 6 3V6l-6-3-6 3Z"/><path d="M9 6v15M15 3v15"/></svg></div><h3>Live map</h3><p>See who's flying and on which frequency, find someone to fly with, then tune in. You're on it too while you fly — that's what makes it useful for the next pilot who looks — and you can turn that off whenever you like. <a href="map.html" class="amber">Open the map →</a></p></div>
     <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><h3>In-cockpit panel</h3><p>Optional MSFS toolbar panel: see who's on your frequency, nearby active frequencies, and mute anyone without leaving the cockpit.</p></div>
-    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Privacy first</h3><p>No accounts, no email, no tracking. Voice is relayed live and never recorded. Your position is only used to compute range — unless you opt in to the map.</p></div>
+    <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Privacy first</h3><p>No accounts, no email, no tracking. Voice is relayed live and never recorded. While you fly you appear on the public live map so others can find you — the app asks when it starts, and it's one tick box in Settings.</p></div>
   </div>
   </div>
 </section>
@@ -301,21 +312,43 @@
 </footer>
 
 <script>
-  // Live "pilots online" counter. Fetches status.json (served from the VPS in phase 2);
-  // stays in a neutral "offline" look until that endpoint exists, so the page is valid today.
+  // Contador de pilotos en vivo. Antes pedía un status.json que NUNCA llegó a existir,
+  // así que llevaba desde el lanzamiento en el estado "offline" — el visitante no ha
+  // visto un número real ni una vez. Ahora sale del mismo endpoint que el mapa, que ya
+  // da los conectados y los pilotos visibles.
+  // Enseña 'online': los conectados de verdad, los sepa el mapa o no.
+  // Con cero (o si falla la petición) se queda en "offline", que no enseña un 0: enseña
+  // "See who's flying on the live map". Misma regla que en el mapa — un cartel de cero
+  // es exacto y a la vez lo peor que puede leer alguien que llega por primera vez.
+  // Cambia el texto de la llamada sin tocar la flecha, que es un elemento aparte
+  // porque se anima al pasar el ratón.
+  function setCta(txt){
+    var c=document.querySelector('#live-counter .offcta');
+    if(c) c.childNodes[0].nodeValue=txt+' ';
+  }
+
   async function loadStatus(){
     var el=document.getElementById('live-counter');
     try{
-      var r=await fetch('status.json',{cache:'no-store'});
+      var r=await fetch('https://ourradiofs.duckdns.org/map/data',{cache:'no-store'});
       if(!r.ok) throw 0;
       var d=await r.json();
-      document.getElementById('lc-pilots').textContent=d.pilots;
-      document.getElementById('lc-freqs').textContent=d.frequencies;
+      var list=Array.isArray(d)?d:(d.pilots||[]);
+      var pilots=(typeof d.online==='number')?Math.max(d.online,list.length):list.length;
+      if(!pilots) throw 0;
+
+      document.getElementById('lc-pilots').textContent=pilots;
+      var lbl=document.querySelector('#live-counter .lbl');
+      if(lbl) lbl.textContent=pilots===1?'pilot':'pilots';
+      setCta("See who's flying");
       el.classList.remove('offline');
       el.title='Pilots connected right now';
     }catch(e){
+      // Sin nadie (o sin respuesta) la llamada carga con todo el peso, así que se
+      // dice entera. No aparece un 0 por ninguna parte.
+      setCta("See who's flying on the live map");
       el.classList.add('offline');
-      el.title='Live count coming soon';
+      el.title="See who's flying right now";
     }
   }
   loadStatus(); setInterval(loadStatus,15000);
