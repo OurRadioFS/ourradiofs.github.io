@@ -16,6 +16,7 @@
       --title: #E6EDF3;
       --muted: #6E7681;
       --amber: #E8A33D;
+      --red: #F85149;
       --mono: 'Consolas', 'SF Mono', 'Roboto Mono', ui-monospace, monospace;
       --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
@@ -171,7 +172,10 @@
     .plane-marker .tag {
       position: absolute;
       left: 40px;
-      top: 31px;
+      /* La caja del avion llega hasta el 33, asi que a 31 la etiqueta se le montaba
+         encima. 36 deja unos 3 px de aire: el cartel se lee como algo aparte y no
+         como parte del dibujo. */
+      top: 36px;
       transform: translateX(-50%);
       padding: 1px 5px;
       color: var(--title);
@@ -195,6 +199,52 @@
     /* Los que quedan fuera del alcance del avión señalado, apagados. */
     .plane-marker.out .plane { color: #4c545e; }
     .plane-marker.out .tag { color: #6E7681; }
+    /* QUIEN ESTA HABLANDO: una onda roja DENTRO de su etiqueta, detras del indicativo
+       —  [ I-EDDI ))) ]  — en el mismo rojo que el visor de la app, donde ya significa
+       "sale tu voz".
+
+       POR QUE EN LA ETIQUETA Y NO EN EL AVION. Primero se probaron saliendo del morro,
+       girando con el rumbo, y quedaban bien; pero traian tres problemas que aqui no
+       existen:
+         · con rumbo sur caian justo encima de la etiqueta, que tiene fondo opaco;
+         · al alejar, varios aviones amontonados sumaban sus ondas —cada una en su
+           rumbo— hasta formar una flor roja ilegible;
+         · dependian del angulo para todo.
+       En la etiqueta no hay rumbo que valga, y se ordenan solas al alejar porque las
+       etiquetas ya se ocultan con poco zoom.
+
+       Y POR QUE DENTRO Y UNA SOLA, no dos por fuera (que tambien se probo):
+         · Por fuera, la etiqueta crecia 22 px al hablar y el marcador se descentraba
+           respecto al avion. Dentro solo se ensancha el propio cartel y sigue centrado.
+         · Por fuera invadia el espacio del vecino: en zonas con trafico chocaba con la
+           etiqueta de al lado.
+         · La segunda onda era simetria decorativa; una detras del nombre se lee igual
+           de rapido y ensucia la mitad.
+
+       Efecto secundario bueno: como va junto al indicativo, de un vistazo sabes QUIEN
+       habla, no solo que alguien habla.
+
+       Va como ::after y no como elemento: no toca el DOM del marcador, que es lo que
+       rompio el aro de alcance en su dia. */
+    .plane-marker.talking .tag { padding-right: 16px; }
+    .plane-marker.talking .tag::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 4px;
+      width: 8px;
+      height: 14px;
+      transform: translateY(-50%);
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M2 4.5a4.5 4.5 0 0 1 0 5' fill='none' stroke='%23F85149' stroke-width='1.4' stroke-linecap='round'/%3E%3Cpath d='M5 2a8 8 0 0 1 0 10' fill='none' stroke='%23F85149' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+      /* Entra y se queda. Sin bucle: una transmision dura pocos segundos, asi que el
+         aparecer y desaparecer YA es el movimiento. Latir todo el rato cansaba. */
+      animation: orfsWaveIn .3s ease-out both;
+    }
+    @keyframes orfsWaveIn { from { opacity: 0 } to { opacity: 1 } }
+
+    /* Fuera de alcance no le oyes: aunque hable, no debe llamar la atencion. */
+    .plane-marker.out .tag::after { display: none; }
+
     /* El señalado se distingue por el COLOR (blanco contra el ámbar del resto y el gris
        de los que quedan fuera de alcance), sin ningún halo. Llevaba un drop-shadow
        blanco y se quitó por lo mismo que el ámbar: el color ya lo separa de sobra. */
@@ -422,8 +472,14 @@
        fila, así que ensanchaba la caja y con ella TODO el popup — 12 px que no pagan lo
        que aportan. Atenuar no ocupa nada y dice lo mismo: la viva es donde habla.
        Solo se aplica con dual watch; con una sola radio no hay nada con qué comparar. */
-    .freq-idle .freq-value { opacity: .45; }
-    .freq-idle .freq-label { opacity: .6; }
+    /* Ni la escucha ni lleva el micro: la tiene sintonizada y ya, por ahi no le
+       alcanzas. Se dice con COLOR (gris), no con mas transparencia. Se probo bajando la
+       opacidad a 0,22 y no valia: sobre fondo oscuro no se lee como "otro estado", solo
+       como algo que se esta borrando. El gris es el mismo idioma que usa el mapa para
+       los aviones fuera de alcance, y ademas mantiene el numero legible — que hace
+       falta, porque es una frecuencia que el piloto SI tiene puesta. */
+    .freq-off .freq-value { color: var(--muted); opacity: 1; }
+    .freq-off .freq-label { color: var(--muted); opacity: 1; }
 
     /* Coordenadas del avión, discretas: N/S arriba, E/W abajo, a la derecha de la freq.
        GRID de 2 columnas (hemisferio | valor), no flex-column: con flex cada línea medía
@@ -525,9 +581,10 @@
       map.addControl(new RangeHint());
     })();
 
-    // Etiquetas visibles solo con zoom alto (al acercar, los aviones ya están separados).
-    // Al alejar → solo iconos, sin amontonar nombres. En cualquier zoom, el hover muestra
-    // el nombre de un avión concreto. Sin ocultar ni mover nada: puro CSS por nivel de zoom.
+    // Etiquetas Y ondas de transmisión, visibles solo con zoom alto (al acercar, los
+    // aviones ya están separados). Al alejar → solo iconos, sin amontonar nombres ni
+    // ondas. En cualquier zoom, el hover muestra el nombre de un avión concreto.
+    // Sin ocultar ni mover nada: puro CSS por nivel de zoom.
     const LABEL_ZOOM = 7;
     function updateLabelVisibility() {
       map.getContainer().classList.toggle('show-tags', map.getZoom() >= LABEL_ZOOM);
@@ -566,6 +623,13 @@
         className: 'plane-marker',
         iconSize: [80, 42],
         iconAnchor: [40, 21],
+        // Sin esto el popup nace en el CENTRO del avion y lo tapa: por defecto
+        // popupAnchor es [0,0] respecto al iconAnchor.
+        // OJO al medirlo: el PICO no esta dentro de la caja de .leaflet-popup, vive en
+        // su margin-bottom de 20 px. Asi que la distancia real al avion es la del pico,
+        // no la de la caja — con -22 el pico quedaba a 2 px y se veia pegado.
+        // -25 deja unos 5 px de aire entre el pico y el dibujo del avion.
+        popupAnchor: [0, -25],
         html:
           '<div class="plane" style="transform:rotate(' + rotation + 'deg)">' +
           PLANE_ICON +
@@ -619,10 +683,26 @@
       // misma frecuencia o con una app anterior llega null, y el pie se queda tal cual.
       const hasCom2 = pilot.freq2 != null && pilot.freq2 > 0;
       // Por cuál está HABLANDO. Sin el dato (app vieja) se asume la COM1, que es donde
-      // habla todo el mundo. La OTRA se pinta apagada — ver .freq-idle: se descartó
-      // marcarla con un punto porque ensanchaba el popup.
+      // habla todo el mundo.
       const txRadio = pilot.tx === 2 ? 2 : 1;
-      const idle = n => hasCom2 && txRadio !== n ? ' freq-idle' : '';
+
+      // DOS estados, y el gris significa UNA sola cosa: no te va a oir ahi.
+      //   normal -> la esta escuchando: puedes llamarle por esa frecuencia.
+      //   gris   -> no la escucha: la tiene sintonizada y ya.
+      //
+      // Hubo un nivel intermedio (la que escucha pero no lleva el micro, atenuada al
+      // 45%) heredado de cuando el atenuado significaba "no es la del micro". Se quito:
+      // a quien mira el mapa lo unico que le sirve es donde puede llamar — que el
+      // selector de micro este en una o en otra es asunto del piloto y lo cambia en un
+      // segundo. Y cuando habla de verdad ya lo dice la onda del indicativo.
+      //
+      // App anterior a la 1.6.1 -> listen viene null -> NO se atenua nada. Si no
+      // sabemos si la escucha, no lo insinuamos: asi el gris tiene un unico
+      // significado, sin depender de la version del que reporta.
+      const idle = n => {
+        const l = n === 1 ? pilot.listen1 : pilot.listen2;
+        return hasCom2 && l === false ? ' freq-off' : '';
+      };
       const freq2 = hasCom2
         ? `<div class="freq-box${idle(2)}">
              <span class="freq-label">COM2</span>
@@ -956,6 +1036,11 @@
 
           markers[callsign] = m;
         }
+
+        // Rojo mientras habla. Se hace aqui, fuera del if/else, para que valga igual
+        // al avion que ya existia y al que se acaba de crear.
+        const mel = markers[callsign] && markers[callsign].getElement();
+        if (mel) mel.classList.toggle('talking', pilot.talking === true);
       });
 
       Object.keys(markers).forEach(function (callsign) {
