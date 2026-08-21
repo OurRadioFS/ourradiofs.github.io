@@ -813,12 +813,10 @@
         if (el) el.classList.remove('out', 'sel');
       });
 
-      
-
-      const callsign = (popupOpen && map._popup) ? callsignOfPopup(map._popup) : hovered;
+      const callsign = hovered;
       const p = callsign ? last[callsign] : null;
 
-      if (!p || p.alt == null) {
+      if (!p || p.alt == null || popupOpen) {
         clearRings();
         return;
       }
@@ -841,20 +839,17 @@
         rings.forEach(function (r) { r.setLatLng([p.lat, p.lon]); });
         rings[0].setRadius(rFade * NM_TO_M);
         rings[1].setRadius(rClear * NM_TO_M);
-
-        rings[0].setStyle({ opacity: popupOpen ? .18 : .28 });
-        rings[1].setStyle({ opacity: popupOpen ? .30 : .45 });
       } else {
         clearRings();
         rings.push(L.circle([p.lat, p.lon], {
           radius: rFade * NM_TO_M, className: 'range-ring',
-          color: '#E8A33D', weight: 1, opacity: popupOpen ? .18 : .28, dashArray: '4 7',
+          color: '#E8A33D', weight: 1, opacity: .28, dashArray: '4 7',
           fill: false, interactive: false
         }).addTo(map));
 
         rings.push(L.circle([p.lat, p.lon], {
           radius: rClear * NM_TO_M, className: 'range-ring',
-          color: '#E8A33D', weight: 1, opacity: popupOpen ? .30 : .45,
+          color: '#E8A33D', weight: 1, opacity: .45,
           fill: true, fillColor: '#E8A33D', fillOpacity: .03, interactive: false
         }).addTo(map));
         ringsFor = callsign;
