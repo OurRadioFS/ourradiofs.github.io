@@ -86,7 +86,7 @@
 
 <main class="doc">
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: 14 August 2026</p>
+  <p class="updated">Last updated: 18 August 2026</p>
 
   <p class="lead">OurRadioFS is designed to collect <strong>the bare minimum</strong>. There are no
   accounts, no sign-up, no email and no tracking. This policy explains the little data that is
@@ -121,7 +121,28 @@
   <ul>
     <li>your callsign, aircraft type and the frequencies you are tuned to — both, if you fly with
       two radios — including which one you transmit on;</li>
-    <li>your simulated aircraft's position, heading, ground speed and vertical speed.</li>
+    <li><strong>where you are heading, only if you use SimBrief.</strong> If you enter a
+      SimBrief Pilot ID in Settings (see <em>Third parties</em>), your app reads the
+      destination airport from your own flight plan and it is shown on the map. Leave that box
+      empty and nothing about your route is ever published.
+      <ul>
+        <li>It is shown only <strong>while you are flying</strong>, and it is cleared when your
+          flight ends. It is never saved to disk, so it cannot reappear on a later flight.</li>
+        <li>A flight plan is only used if it <strong>matches the flight you are actually
+          making</strong>: it must depart from the airport you took off from, and it must be
+          recent. An old plan is never published.</li>
+        <li>So the map can draw your route, we also work out <strong>which airport you took off
+          from</strong>. We match the position where your flight started against a public list
+          of airports. It comes from the position we already publish, and if you did not start
+          near an airport, none is shown.</li>
+      </ul></li>
+    <li>your simulated aircraft's position, heading, ground speed and vertical speed;</li>
+    <li>whether you are transmitting right now, so the map can show who is talking.
+      <strong>Nothing is recorded.</strong> The app sends one signal when you press your
+      push-to-talk key and another when you release it; the server keeps only that live
+      on/off state in memory, drops it the moment you stop, and drops it by itself within
+      seconds if your connection fails. <strong>How long or how often you talk is never
+      measured, counted, logged or stored</strong>, and none of it is ever written to disk.</li>
   </ul>
   <p><strong>Since version 1.6.0 this is on by default.</strong> It used to be off unless you
   ticked it. We changed it because a map that looks empty makes people think nobody is on the air,
@@ -168,12 +189,22 @@
     <li><strong>Simulated position:</strong> held only while you are flying, to work out radio range.
       If you enable the live map, the map holds your last position for about two minutes and then
       drops it. Nothing is kept afterwards and no history or track is stored.</li>
+    <li><strong>Whether you are transmitting:</strong> a live on/off state, held in memory
+      only while you are actually transmitting and cleared within seconds of you stopping.
+      It is never written to disk, never logged, and no history, duration or count is ever
+      built from it.</li>
   </ul>
 
   <h2>Third parties</h2>
   <ul>
     <li><strong>Voice server / hosting provider:</strong> relays your voice in real time. No
       recording is produced.</li>
+    <li><strong>SimBrief:</strong> only if you choose to enter a SimBrief Pilot ID in Settings.
+      Your app then asks SimBrief for your latest flight plan, <strong>directly from your
+      computer</strong>. Your Pilot ID is never sent to our servers, and we never see your
+      flight plan: the app keeps only the destination airport code, and only if that plan
+      matches the airport you actually took off from. Leave the box empty and your app never
+      contacts SimBrief at all.</li>
     <li><strong>Ko-fi:</strong> only if you choose to donate, and only through Ko-fi's own
       systems.</li>
   </ul>
@@ -202,13 +233,13 @@
       <a href="index.html">Home</a>
     </div>
     <p class="disc">OurRadioFS is a fan-made tool for flight simulation. It is not affiliated with,
-    endorsed by, or associated with Microsoft, Asobo Studio, Laminar Research, or Discord. Microsoft
-    Flight Simulator is a trademark of Microsoft Corporation; X-Plane is a trademark of Laminar
-    Research.</p>
+    endorsed by, sponsored by or associated with Microsoft, Asobo Studio, Laminar Research,
+    Navigraph, SimBrief or Discord. Microsoft Flight Simulator is a trademark of Microsoft
+    Corporation; X-Plane is a trademark of Laminar Research; SimBrief and Navigraph are
+    trademarks of Navigraph. They are named only to describe what this app works with.</p>
     <p style="margin:10px 0 0">© 2026 OurRadioFS</p>
   </div>
 </footer>
 
 </body>
 </html>
-
