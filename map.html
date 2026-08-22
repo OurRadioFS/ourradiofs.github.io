@@ -240,13 +240,10 @@
       overflow: visible;
     }
 
-    /* AVIÓN SELECCIONADO */
     .plane-marker.sel .plane {
       color: var(--green);
     }
 
-    /* IMPORTANTE:
-       El callsign NO cambia de color ni recibe ningún borde verde. */
     .plane-marker.sel .tag {
       color: var(--title);
       border-color: var(--border);
@@ -779,8 +776,6 @@
     updateLabelVisibility();
 
 
-    /* SIDEBAR */
-
     const sidebarEl = document.getElementById('sidebar');
 
     L.DomEvent.disableClickPropagation(sidebarEl);
@@ -804,7 +799,6 @@
     });
 
 
-    /* PLANE ICON */
 
     const PLANE_ICON =
       '<svg viewBox="0 0 24 24" fill="currentColor">' +
@@ -840,7 +834,6 @@
     }
 
 
-    /* FLIGHT INFORMATION */
 
     function generateFlightInfoHtml(pilot) {
 
@@ -1129,7 +1122,6 @@
     }
 
 
-    /* UTILITIES */
 
     function haversineKm(
       lat1,
@@ -1256,7 +1248,6 @@
     }
 
 
-    /* MARKERS / STATE */
 
     const markers = {};
 
@@ -1283,7 +1274,6 @@
     let isProgrammaticPan = false;
 
 
-    /* SELECT PLANE */
 
     function selectPlane(callsign) {
 
@@ -1301,10 +1291,6 @@
         .classList.add('open');
 
 
-      /*
-       * AQUÍ SE AÑADE LA CLASE .sel AL AVIÓN SELECCIONADO.
-       * Esa clase hace que SOLO el avión sea verde.
-       */
       Object.keys(markers).forEach(function (cs) {
 
         const el =
@@ -1356,9 +1342,6 @@
         .classList.remove('open');
 
 
-      /*
-       * Al cerrar el sidebar, ningún avión queda verde.
-       */
 
       Object.keys(markers).forEach(function (cs) {
 
@@ -1379,7 +1362,6 @@
     }
 
 
-    /* ROUTE */
 
     function clearRoute() {
 
@@ -1497,7 +1479,6 @@
     }
 
 
-    /* RADIO RANGE */
 
     const NM_TO_M = 1852;
 
@@ -1589,12 +1570,6 @@
             );
 
           }
-
-          /*
-           * IMPORTANTE:
-           * .sel NO se elimina aquí.
-           * El avión seleccionado debe seguir verde.
-           */
 
         }
       );
@@ -2200,10 +2175,6 @@
             );
 
 
-            /*
-             * Mantenemos el avión seleccionado
-             * en verde incluso después de cada refresh.
-             */
 
             mel.classList.toggle(
               'sel',
@@ -2281,7 +2252,6 @@
     }
 
 
-    /* ONLINE COUNT */
 
     function updateCount(
       onMap,
@@ -2348,8 +2318,6 @@
 
     }
 
-
-    /* API */
 
     const MAP_DATA =
       (
