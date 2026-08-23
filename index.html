@@ -34,7 +34,6 @@
   .muted{color:var(--muted)}
   .amber{color:var(--amber)}
 
-  /* Header */
   header{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);
          backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
   .nav{display:flex;align-items:center;height:60px;gap:12px}
@@ -52,7 +51,6 @@
   .btn-ghost:hover{background:var(--surface);border-color:#484f58;transform:translateY(-1px)}
   @media(max-width:720px){.nav .links a:not(.btn){display:none}}
 
-  /* Hero */
   .hero{padding:72px 0 40px;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
   .hero h1{font-size:44px;letter-spacing:-.5px}
   .hero .lead{font-size:18px;color:var(--text);margin:18px 0 26px;max-width:32ch}
@@ -61,12 +59,6 @@
        border:1px solid rgba(232,163,61,.35);border-radius:999px;padding:4px 12px;margin-bottom:20px}
   @media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:48px}.hero h1{font-size:34px}}
 
-  /* Live counter */
-  /* ALTO FIJO, el mismo que el botón de descarga. Se pone a mano en vez de dejarlo
-     salir del padding porque el alto lo acababa mandando la caja de línea de la fuente
-     mono del número, y bailaba entre 41,6 y 43,2 según hubiera cifra o no — al lado del
-     botón, ese pixel y medio se nota. Con height fijo y align-items:center da igual lo
-     que lleve dentro. box-sizing:border-box es global, así que 42 son 42 con borde. */
   .live{display:inline-flex;align-items:center;gap:12px;height:42px;line-height:1;
         background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 16px;
         transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
@@ -78,16 +70,12 @@
   .live .sep{color:var(--border);margin:0 4px}
   .live .arr{color:var(--amber);display:inline-block;transition:transform .16s ease}
   .live:hover .arr{transform:translateX(4px)}
-  /* El número solo existe si hay gente; la llamada al mapa está SIEMPRE. Sin ella,
-     con pilotos conectados quedaba un número suelto que no parecía pulsable y no
-     invitaba a nada. El texto de la llamada lo ajusta el JS según el caso. */
   .live .online{display:none}
   .live.offline .online{display:none}
   .live:not(.offline) .online{display:inline}
   .live .offcta{display:inline;font-size:14px;color:var(--text);font-weight:500}
   .live:not(.offline) .offcta{color:var(--muted);font-weight:400}
 
-  /* Radio mock */
   .radio{background:linear-gradient(#12161d,#0c1015);border:1px solid var(--border);
          border-radius:16px;padding:0;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);max-width:380px;margin:0 auto;width:100%}
   .radio .rhead{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--border);background:#11151c}
@@ -118,9 +106,7 @@
   .rfoot .s{font-size:11px;color:var(--muted)}
   .rfoot .k{font-size:11px;color:var(--muted);font-family:var(--mono)}
 
-  /* Sections */
   section{padding:56px 0;border-top:1px solid var(--border)}
-  /* La cabecera es sticky (60px): sin esto el ancla deja el título debajo de ella */
   section[id]{scroll-margin-top:70px}
   .center{text-align:center;max-width:640px;margin:0 auto 40px}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
@@ -149,19 +135,18 @@
             border:1px solid var(--border);border-radius:16px;
             padding:42px 36px;text-align:center}
 
-  /* Descarga: una tarjeta por simulador. Las DOS únicas URLs de descarga del fichero
-     están aquí; el resto de botones apuntan a #download con un ancla. */
   .dl{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:760px;margin:0 auto}
   .dl .opt{text-align:center;display:flex;flex-direction:column;align-items:center;padding:26px 22px}
   .dl .opt .ico{margin:0 auto 16px}
   .dl .opt h3{font-size:18px;margin-bottom:6px}
-  .dl .opt .sim{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 0 20px}
-  .dl .opt .btn{width:100%;justify-content:center;margin-top:auto}
-  .dl .opt .ver{font-family:var(--mono);font-size:11px;color:var(--muted);margin:12px 0 0}
+  .dl .opt .sim{font-family:var(--mono);font-size:12px;color:var(--muted);margin:0 0 16px}
+  .dl .opt .btn{width:100%;justify-content:center;margin:0 0 16px}
+  .dl .opt .ver{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0}
+  .dl .opt .alt-link{font-size:12px;color:var(--muted);margin:6px 0 0}
+  .dl .opt .alt-link a{color:var(--amber);text-decoration:underline}
+  .dl .opt .alt-link a:hover{color:var(--title)}
   @media(max-width:720px){.dl{grid-template-columns:1fr}}
 
-  /* Franja de Ko-fi dentro de la sección de descarga. Horizontal y baja de altura
-     a propósito: tiene que caber en la misma pantalla que los botones. */
   .support{display:flex;align-items:center;justify-content:center;gap:26px;flex-wrap:wrap;
            background:radial-gradient(620px 320px at 50% 0%,rgba(232,163,61,.11),transparent 65%),var(--surface);
            border:1px solid var(--border);border-radius:16px;padding:22px 28px;
@@ -173,8 +158,6 @@
   .support.thanks{border-color:rgba(232,163,61,.55)}
   @media(max-width:640px){.support{flex-direction:column;text-align:center}}
 
-  /* Chapa oficial de Ko-fi: la imagen ya trae sus esquinas redondeadas y su fondo,
-     así que la sombra va con drop-shadow (respeta el alfa) y no con box-shadow. */
   .kofi{display:inline-block;line-height:0;transition:transform .18s ease,filter .18s ease}
   .kofi img{width:196px;height:auto;display:block}
   .kofi:hover{transform:translateY(-2px);filter:drop-shadow(0 12px 26px rgba(0,0,0,.5))}
@@ -206,19 +189,10 @@
     <span class="tag">MSFS 20/24 & X-Plane 11/12</span>
     <h1>Talk to the pilots flying around you.</h1>
     <p class="lead">OurRadioFS is a virtual VHF radio for Microsoft Flight Simulator and X-Plane. Tune a COM frequency and speak to whoever is on it and in range — real radio distance, real fade-out, one shared sky. MSFS and X-Plane pilots share the same frequencies.</p>
-    <!-- Botón y contador en la MISMA fila. El "See the live map" que había aquí se
-         quitó: el contador lleva al mismo sitio y además dice cuánta gente hay, así que
-         el botón era un tercer enlace al mapa en la misma pantalla (con el del menú) y
-         solo le restaba peso al de descarga. Los dos miden 42 px de alto para que la
-         fila quede a ras; en móvil el .cta hace wrap y el contador cae debajo solo. -->
     <div class="cta">
       <a class="btn btn-primary" href="#download">Download free</a>
       <a id="live-counter" class="live offline" href="map.html" title="See who's flying right now">
         <span class="dot"></span>
-        <!-- UN solo número. Hubo un segundo contador de frecuencias distintas y se
-             quitó: quien está en la portada aún no tiene la app y no puede sintonizar
-             ninguna, y con números pequeños "3 pilots · 2 frequencies" se lee como
-             "hay gente, pero dispersa" — convierte una señal buena en una matizada. -->
         <span class="online">
           <b id="lc-pilots">0</b> <span class="lbl">pilots</span>
         </span>
@@ -229,6 +203,7 @@
 
   <img src="assets/ORFS7.png" alt="Interfaz de OurRadioFS" style="max-width:320px; width:80%; margin:0 auto; display:block; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.5); border:1px solid var(--border);">
 </div>
+
 <section id="features">
   <div class="center">
     <h2>A real radio, not a chat room</h2>
@@ -266,27 +241,26 @@
   <div class="wrap" style="padding:0">
   <div class="dl">
 
-    <!-- MSFS -->
     <div class="card opt">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.1 2.1 0 0 0-3-3L13 8 4.8 6.2a.6.6 0 0 0-.6.9l3.6 5.4-2.1 2.1H3.5l-.7 1.4 3 1.4 1.4 3 1.4-.7v-2.2l2.1-2.1 5.4 3.6a.6.6 0 0 0 .9-.6Z"/></svg></div>
       <h3>Microsoft Flight Simulator</h3>
       <p class="sim">MSFS 2020 &amp; 2024 · in-cockpit panel included</p>
       <a class="btn btn-primary" href="https://github.com/OurRadioFS/ourradiofs.github.io/releases/download/update/OurRadioFS-v1.6.1-MSFS.zip">Download for MSFS</a>
       <p class="ver">v1.6.1 · ZIP · 48 MB</p>
+      <p class="alt-link">Alternative download on <a href="https://flightsim.to/addon/111739/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">flightsim.to</a></p>
     </div>
 
-    <!-- X-Plane -->
     <div class="card opt">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg></div>
       <h3>X-Plane</h3>
       <p class="sim">X-Plane 11 &amp; 12 · no plugin required</p>
       <a class="btn btn-primary" href="https://github.com/OurRadioFS/ourradiofs.github.io/releases/download/update/OurRadioFS-v1.6.1-XPlane.zip">Download for X-Plane</a>
       <p class="ver">v1.6.1 · ZIP · 48 MB</p>
+      <p class="alt-link">Alternative download on <a href="https://x-plane.to/file/2444/ourradiofs-the-community-vhf-radio" target="_blank" rel="noopener">xplane.to</a></p>
     </div>
 
   </div>
-  <!-- La petición de Ko-fi va AQUÍ, no al final de la página: quien entra por
-       #download se lleva el ZIP y se va, y abajo no llegaba a verla nunca. -->
+
   <div class="support" id="support">
     <a class="kofi" href="https://ko-fi.com/ourradiofs" target="_blank" rel="noopener"><img src="https://storage.ko-fi.com/cdn/brandasset/v2/support_me_on_kofi_badge_beige.png" alt="Support me on Ko-fi" width="672" height="356"></a>
     <div class="txt">
@@ -313,16 +287,6 @@
 </footer>
 
 <script>
-  // Contador de pilotos en vivo. Antes pedía un status.json que NUNCA llegó a existir,
-  // así que llevaba desde el lanzamiento en el estado "offline" — el visitante no ha
-  // visto un número real ni una vez. Ahora sale del mismo endpoint que el mapa, que ya
-  // da los conectados y los pilotos visibles.
-  // Enseña 'online': los conectados de verdad, los sepa el mapa o no.
-  // Con cero (o si falla la petición) se queda en "offline", que no enseña un 0: enseña
-  // "See who's flying on the live map". Misma regla que en el mapa — un cartel de cero
-  // es exacto y a la vez lo peor que puede leer alguien que llega por primera vez.
-  // Cambia el texto de la llamada sin tocar la flecha, que es un elemento aparte
-  // porque se anima al pasar el ratón.
   function setCta(txt){
     var c=document.querySelector('#live-counter .offcta');
     if(c) c.childNodes[0].nodeValue=txt+' ';
@@ -345,8 +309,6 @@
       el.classList.remove('offline');
       el.title='Pilots connected right now';
     }catch(e){
-      // Sin nadie (o sin respuesta) la llamada carga con todo el peso, así que se
-      // dice entera. No aparece un 0 por ninguna parte.
       setCta("See who's flying on the live map");
       el.classList.add('offline');
       el.title="See who's flying right now";
@@ -354,8 +316,6 @@
   }
   loadStatus(); setInterval(loadStatus,15000);
 
-  // Al pulsar una descarga, la franja de Ko-fi pasa a dar las gracias. El ZIP ya se
-  // está bajando (la página no se mueve), que es cuando la petición sienta bien.
   document.querySelectorAll('#download .opt .btn').forEach(function(b){
     b.addEventListener('click',function(){
       var t=document.getElementById('support-title');
