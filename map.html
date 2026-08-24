@@ -277,6 +277,10 @@
       animation: orfsWaveIn 0.3s ease-out both;
     }
 
+    .plane-marker.sel .tag::after {
+      background-color: var(--green);
+    }
+
     @keyframes orfsWaveIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -284,6 +288,53 @@
 
     .plane-marker.out .tag::after {
       display: none;
+    }
+
+    .airport-box {
+      position: absolute;
+    }
+
+    .airport-marker {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(13, 17, 23, 0.92);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .airport-marker.dep {
+      color: var(--amber);
+    }
+
+    .airport-marker.arr {
+      color: var(--muted);
+    }
+
+    .airport-marker svg {
+      display: block;
+      flex: none;
+      width: 11px;
+      height: 11px;
+    }
+
+    .airport-marker svg path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     #map.show-tags .plane-marker .tag {
@@ -1271,6 +1322,8 @@
 
     let routeFor = null;
 
+    let routeEnds = null;
+
     let isProgrammaticPan = false;
 
 
@@ -1375,6 +1428,112 @@
 
       routeFor = null;
 
+      routeEnds = null;
+
+    }
+
+
+    const tracks = {};
+    const tracksAt = {};
+    const TRACK_REFRESH_MS = 10000;
+
+
+    function trackUrl(callsign) {
+
+      return MAP_DATA.replace(
+        /\/map\/data$/,
+        "/map/track/"
+      ) + encodeURIComponent(callsign);
+
+    }
+
+
+    function fetchTrack(callsign) {
+
+      const ahora = Date.now();
+
+      if (
+        tracksAt[callsign] &&
+        ahora - tracksAt[callsign] < TRACK_REFRESH_MS
+      ) {
+
+        return;
+
+      }
+
+      tracksAt[callsign] = ahora;
+
+      fetch(trackUrl(callsign))
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (d) {
+
+          if (!d || !Array.isArray(d.points)) {
+            return;
+          }
+
+          tracks[callsign] = d.points;
+
+          if (routeFor === callsign) {
+            routeFor = null;
+            paintRoute(callsign);
+          }
+
+        })
+        .catch(function () {
+          /* sin rastro se pinta la recta de siempre */
+        });
+
+    }
+
+
+    const ICONO_SALIDA =
+      '<svg viewBox="0 0 16 16">' +
+      '<path d="M2 14h12"/>' +
+      '<path d="M3.5 10.5 12 4"/>' +
+      '<path d="M12 4 8.6 4.4M12 4 11.6 7.4"/>' +
+      '</svg>';
+
+
+    const ICONO_LLEGADA =
+      '<svg viewBox="0 0 16 16">' +
+      '<path d="M2 14h12"/>' +
+      '<path d="M3.5 4 12 10.5"/>' +
+      '<path d="M12 10.5 8.6 10.1M12 10.5 11.6 7.1"/>' +
+      '</svg>';
+
+
+    function icaoValido(v) {
+
+      return /^[A-Z]{4}$/.test(v || '')
+        ? v
+        : null;
+
+    }
+
+
+    function airportMarker(lat, lon, icao, tipo) {
+
+      return L.marker(
+        [lat, lon],
+        {
+          interactive: false,
+          keyboard: false,
+          zIndexOffset: -1000,
+          icon: L.divIcon({
+            className: 'airport-box',
+            html:
+              '<div class="airport-marker ' + tipo + '">' +
+              (tipo === 'dep' ? ICONO_SALIDA : ICONO_LLEGADA) +
+              '<span>' + icao + '</span>' +
+              '</div>',
+            iconSize: [90, 22],
+            iconAnchor: [45, 11]
+          })
+        }
+      ).addTo(map);
+
     }
 
 
@@ -1413,21 +1572,43 @@
           : [p.lat, p.lon];
 
 
-      if (routeFor === callsign) {
+      fetchTrack(callsign);
 
-        routeLines[0].setLatLngs(
-          [
-            desde,
-            [p.lat, p.lon]
-          ]
-        );
+      const rastro = tracks[callsign];
 
-        routeLines[1].setLatLngs(
-          [
-            [p.lat, p.lon],
-            [p.destLat, p.destLon]
-          ]
-        );
+      const recorrido =
+        (rastro && rastro.length > 1)
+          ? rastro.concat([[p.lat, p.lon]])
+          : [desde, [p.lat, p.lon]];
+
+
+      const icaoDep = icaoValido(p.dep);
+
+      const icaoDest = icaoValido(p.dest);
+
+
+      const haciaDestino =
+        p.destLat != null
+          ? [
+              [p.lat, p.lon],
+              [p.destLat, p.destLon]
+            ]
+          : [];
+
+
+      const extremos =
+        (volado ? '^' : '_') +
+        (icaoDep || '') + '>' + (icaoDest || '');
+
+
+      if (
+        routeFor === callsign &&
+        routeEnds === extremos
+      ) {
+
+        routeLines[0].setLatLngs(recorrido);
+
+        routeLines[1].setLatLngs(haciaDestino);
 
         return;
 
@@ -1440,10 +1621,7 @@
       routeLines.push(
 
         L.polyline(
-          [
-            desde,
-            [p.lat, p.lon]
-          ],
+          recorrido,
           {
             color: '#E8A33D',
             weight: 1.5,
@@ -1458,10 +1636,7 @@
       routeLines.push(
 
         L.polyline(
-          [
-            [p.lat, p.lon],
-            [p.destLat, p.destLon]
-          ],
+          haciaDestino,
           {
             color: '#8B949E',
             weight: 1.5,
@@ -1474,7 +1649,37 @@
       );
 
 
+      if (icaoDep && volado) {
+
+        routeLines.push(
+          airportMarker(
+            p.depLat,
+            p.depLon,
+            icaoDep,
+            'dep'
+          )
+        );
+
+      }
+
+
+      if (icaoDest && p.destLat != null) {
+
+        routeLines.push(
+          airportMarker(
+            p.destLat,
+            p.destLon,
+            icaoDest,
+            'arr'
+          )
+        );
+
+      }
+
+
       routeFor = callsign;
+
+      routeEnds = extremos;
 
     }
 
@@ -2327,7 +2532,7 @@
 
         ? 'http://localhost:8787/map/data'
 
-        : 'https://ourradiofs.duckdns.org/map/data';
+        : 'https://data.ourradiofs.com/map/data';
 
 
     async function load() {
