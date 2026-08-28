@@ -286,6 +286,53 @@
       display: none;
     }
 
+    .airport-box {
+      position: absolute;
+    }
+
+    .airport-marker {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(13, 17, 23, 0.92);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .airport-marker.dep {
+      color: var(--amber);
+    }
+
+    .airport-marker.arr {
+      color: var(--muted);
+    }
+
+    .airport-marker svg {
+      display: block;
+      flex: none;
+      width: 11px;
+      height: 11px;
+    }
+
+    .airport-marker svg path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     #map.show-tags .plane-marker .tag {
       display: block;
     }
@@ -473,6 +520,34 @@
       color: var(--title);
       letter-spacing: 0.4px;
       line-height: 1;
+    }
+
+    .flight-phase {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .phase-dot {
+      flex: none;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .flight-phase.air .phase-dot {
+      background: var(--green);
+    }
+
+    .flight-phase.edge .phase-dot {
+      background: var(--amber);
     }
 
     .flight-route-box {
@@ -701,6 +776,11 @@
   <script>
 
     const cartoDark = L.tileLayer(
+      // CON CLAVE. Las teselas sin clave las sirve CARTO como cortesia y limitan por
+      // volumen: con el mapa creciendo, un dia dejan de cargar sin avisar y el mapa sale
+      // negro. La clave va en la URL a proposito —es una clave de cliente, viaja en cada
+      // peticion de tesela y cualquiera que abra el mapa la ve—, asi que no es un secreto
+      // que se filtre aqui: es como funciona el servicio.
       'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2a7p_1_eedec528d03b71c956a28ed4',
       {
         subdomains: 'abcd',
@@ -835,6 +915,142 @@
 
 
 
+    const PHASE_NEAR_KM = 9;
+    const PHASE_STOPPED_KTS = 5;
+    const PHASE_TAXI_KTS = 40;
+    const PHASE_VS_EDGE = 200;
+    const PHASE_VS_CHANGE = 300;
+    const PHASE_ROLL_KTS = 150;
+    const PHASE_VS_STAY = 100;
+    const PHASE_CONFIRM = 2;
+
+    const PHASE_FROM_GROUND = ['parked', 'taxi', 'takeoff'];
+
+    const PHASE_ON_STAND = ['parked', 'taxi'];
+
+    const PHASE_NAMES = {
+      parked: ['Parked', 'ground'],
+      stopped: ['Stopped', 'ground'],
+      taxi: ['Taxiing', 'ground'],
+      takeoff: ['Taking off', 'edge'],
+      climb: ['Climbing', 'air'],
+      cruise: ['Cruising', 'air'],
+      descent: ['Descending', 'air'],
+      landing: ['Landing', 'edge']
+    };
+
+    const phaseNow = {};
+    const phaseTry = {};
+
+
+
+    function hasFullPlan(p) {
+
+      return /^[A-Z]{4}$/.test(p.dep) &&
+        /^[A-Z]{4}$/.test(p.dest) &&
+        p.depLat != null &&
+        p.destLat != null;
+
+    }
+
+
+    function rawPhase(p, was) {
+
+      const kts = p.speed;
+      const fpm = p.vspeed;
+
+      if (kts == null || fpm == null) {
+        return null;
+      }
+
+      const near = function (lat, lon) {
+        return lat != null &&
+          haversineKm(p.lat, p.lon, lat, lon) <= PHASE_NEAR_KM;
+      };
+
+      const atDep = near(p.depLat, p.depLon);
+      const atDest = near(p.destLat, p.destLon);
+
+      if (kts < PHASE_STOPPED_KTS) {
+
+        if (was == null) {
+          return (atDep || atDest)
+            ? 'parked'
+            : 'stopped';
+        }
+
+        return PHASE_ON_STAND.indexOf(was) >= 0
+          ? 'parked'
+          : 'stopped';
+
+      }
+
+      if (kts < PHASE_TAXI_KTS) {
+        return 'taxi';
+      }
+
+      if (atDep && fpm > PHASE_VS_EDGE) {
+        return 'takeoff';
+      }
+
+      if ((atDest || atDep) && fpm < -PHASE_VS_EDGE) {
+        return 'landing';
+      }
+
+      if ((atDep || atDest) && kts < PHASE_ROLL_KTS) {
+        return PHASE_FROM_GROUND.indexOf(was) >= 0
+          ? 'takeoff'
+          : 'landing';
+      }
+
+      if (fpm > (was === 'climb' ? PHASE_VS_STAY : PHASE_VS_CHANGE)) {
+        return 'climb';
+      }
+
+      if (fpm < -(was === 'descent' ? PHASE_VS_STAY : PHASE_VS_CHANGE)) {
+        return 'descent';
+      }
+
+      return 'cruise';
+
+    }
+
+
+    function flightPhase(p) {
+
+      const cs = p.callsign;
+      const raw = rawPhase(p, phaseNow[cs]);
+
+      if (raw == null) {
+        return null;
+      }
+
+      if (phaseNow[cs] == null) {
+        phaseNow[cs] = raw;
+        phaseTry[cs] = { name: raw, hits: 0 };
+        return raw;
+      }
+
+      if (raw === phaseNow[cs]) {
+        phaseTry[cs] = { name: raw, hits: 0 };
+        return raw;
+      }
+
+      if (phaseTry[cs] && phaseTry[cs].name === raw) {
+        phaseTry[cs].hits += 1;
+        if (phaseTry[cs].hits >= PHASE_CONFIRM) {
+          phaseNow[cs] = raw;
+          phaseTry[cs].hits = 0;
+        }
+      } else {
+        phaseTry[cs] = { name: raw, hits: 1 };
+      }
+
+      return phaseNow[cs];
+
+    }
+
+
     function generateFlightInfoHtml(pilot) {
 
       const aircraft =
@@ -880,11 +1096,18 @@
           ? pilot.dest.trim().toUpperCase()
           : 'DEST';
 
-      const hasRoute =
-        /^[A-Z]{4}$/.test(pilot.dep) &&
-        /^[A-Z]{4}$/.test(pilot.dest) &&
-        pilot.depLat != null &&
-        pilot.destLat != null;
+      const hasRoute = hasFullPlan(pilot);
+
+      const phase = hasFullPlan(pilot)
+        ? (phaseNow[pilot.callsign] || flightPhase(pilot))
+        : null;
+
+      const phaseSection = phase
+        ? `<div class="flight-phase ${PHASE_NAMES[phase][1]}">` +
+          `<span class="phase-dot"></span>` +
+          `${esc(PHASE_NAMES[phase][0])}</div>`
+        : '';
+
 
       let routeSection = '';
 
@@ -1021,6 +1244,8 @@
             ${aircraftBadge}
 
           </div>
+
+          ${phaseSection}
 
           ${routeSection}
 
@@ -1271,6 +1496,8 @@
 
     let routeFor = null;
 
+    let routeEnds = null;
+
     let isProgrammaticPan = false;
 
 
@@ -1375,6 +1602,112 @@
 
       routeFor = null;
 
+      routeEnds = null;
+
+    }
+
+
+    const tracks = {};
+    const tracksAt = {};
+    const TRACK_REFRESH_MS = 10000;
+
+
+    function trackUrl(callsign) {
+
+      return MAP_DATA.replace(
+        /\/map\/data$/,
+        "/map/track/"
+      ) + encodeURIComponent(callsign);
+
+    }
+
+
+    function fetchTrack(callsign) {
+
+      const ahora = Date.now();
+
+      if (
+        tracksAt[callsign] &&
+        ahora - tracksAt[callsign] < TRACK_REFRESH_MS
+      ) {
+
+        return;
+
+      }
+
+      tracksAt[callsign] = ahora;
+
+      fetch(trackUrl(callsign))
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (d) {
+
+          if (!d || !Array.isArray(d.points)) {
+            return;
+          }
+
+          tracks[callsign] = d.points;
+
+          if (routeFor === callsign) {
+            routeFor = null;
+            paintRoute(callsign);
+          }
+
+        })
+        .catch(function () {
+          /* sin rastro se pinta la recta de siempre */
+        });
+
+    }
+
+
+    const ICONO_SALIDA =
+      '<svg viewBox="0 0 16 16">' +
+      '<path d="M2 14h12"/>' +
+      '<path d="M3.5 10.5 12 4"/>' +
+      '<path d="M12 4 8.6 4.4M12 4 11.6 7.4"/>' +
+      '</svg>';
+
+
+    const ICONO_LLEGADA =
+      '<svg viewBox="0 0 16 16">' +
+      '<path d="M2 14h12"/>' +
+      '<path d="M3.5 4 12 10.5"/>' +
+      '<path d="M12 10.5 8.6 10.1M12 10.5 11.6 7.1"/>' +
+      '</svg>';
+
+
+    function icaoValido(v) {
+
+      return /^[A-Z]{4}$/.test(v || '')
+        ? v
+        : null;
+
+    }
+
+
+    function airportMarker(lat, lon, icao, tipo) {
+
+      return L.marker(
+        [lat, lon],
+        {
+          interactive: false,
+          keyboard: false,
+          zIndexOffset: -1000,
+          icon: L.divIcon({
+            className: 'airport-box',
+            html:
+              '<div class="airport-marker ' + tipo + '">' +
+              (tipo === 'dep' ? ICONO_SALIDA : ICONO_LLEGADA) +
+              '<span>' + icao + '</span>' +
+              '</div>',
+            iconSize: [90, 22],
+            iconAnchor: [45, 11]
+          })
+        }
+      ).addTo(map);
+
     }
 
 
@@ -1413,21 +1746,43 @@
           : [p.lat, p.lon];
 
 
-      if (routeFor === callsign) {
+      fetchTrack(callsign);
 
-        routeLines[0].setLatLngs(
-          [
-            desde,
-            [p.lat, p.lon]
-          ]
-        );
+      const rastro = tracks[callsign];
 
-        routeLines[1].setLatLngs(
-          [
-            [p.lat, p.lon],
-            [p.destLat, p.destLon]
-          ]
-        );
+      const recorrido =
+        (rastro && rastro.length > 1)
+          ? rastro.concat([[p.lat, p.lon]])
+          : [desde, [p.lat, p.lon]];
+
+
+      const icaoDep = icaoValido(p.dep);
+
+      const icaoDest = icaoValido(p.dest);
+
+
+      const haciaDestino =
+        p.destLat != null
+          ? [
+              [p.lat, p.lon],
+              [p.destLat, p.destLon]
+            ]
+          : [];
+
+
+      const extremos =
+        (volado ? '^' : '_') +
+        (icaoDep || '') + '>' + (icaoDest || '');
+
+
+      if (
+        routeFor === callsign &&
+        routeEnds === extremos
+      ) {
+
+        routeLines[0].setLatLngs(recorrido);
+
+        routeLines[1].setLatLngs(haciaDestino);
 
         return;
 
@@ -1440,10 +1795,7 @@
       routeLines.push(
 
         L.polyline(
-          [
-            desde,
-            [p.lat, p.lon]
-          ],
+          recorrido,
           {
             color: '#E8A33D',
             weight: 1.5,
@@ -1458,10 +1810,7 @@
       routeLines.push(
 
         L.polyline(
-          [
-            [p.lat, p.lon],
-            [p.destLat, p.destLon]
-          ],
+          haciaDestino,
           {
             color: '#8B949E',
             weight: 1.5,
@@ -1474,7 +1823,37 @@
       );
 
 
+      if (icaoDep && volado) {
+
+        routeLines.push(
+          airportMarker(
+            p.depLat,
+            p.depLon,
+            icaoDep,
+            'dep'
+          )
+        );
+
+      }
+
+
+      if (icaoDest && p.destLat != null) {
+
+        routeLines.push(
+          airportMarker(
+            p.destLat,
+            p.destLon,
+            icaoDest,
+            'arr'
+          )
+        );
+
+      }
+
+
       routeFor = callsign;
+
+      routeEnds = extremos;
 
     }
 
@@ -2016,6 +2395,11 @@
             pilot;
 
 
+          if (hasFullPlan(pilot)) {
+            flightPhase(pilot);
+          }
+
+
           if (marker) {
 
             marker.setLatLng(
@@ -2203,6 +2587,10 @@
 
               delete last[callsign];
 
+              delete phaseNow[callsign];
+
+              delete phaseTry[callsign];
+
 
               cancelRange();
 
@@ -2327,7 +2715,7 @@
 
         ? 'http://localhost:8787/map/data'
 
-        : 'https://ourradiofs.duckdns.org/map/data';
+        : 'https://data.ourradiofs.com/map/data';
 
 
     async function load() {
