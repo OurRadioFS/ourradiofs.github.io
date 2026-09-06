@@ -479,6 +479,49 @@
       gap: 10px;
     }
 
+    .flight-actions-bar {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+
+    .flight-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 10px;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .flight-action-btn svg {
+      width: 13px;
+      height: 13px;
+      fill: currentColor;
+      flex: none;
+    }
+
+    .flight-action-btn:hover {
+      border-color: var(--muted);
+      color: var(--title);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .flight-action-btn.active {
+      background: rgba(232, 163, 61, 0.12);
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
     .flight-card-main {
       background: var(--surface-card);
       border: 1px solid var(--border);
@@ -776,11 +819,6 @@
   <script>
 
     const cartoDark = L.tileLayer(
-      // CON CLAVE. Las teselas sin clave las sirve CARTO como cortesia y limitan por
-      // volumen: con el mapa creciendo, un dia dejan de cargar sin avisar y el mapa sale
-      // negro. La clave va en la URL a proposito —es una clave de cliente, viaja en cada
-      // peticion de tesela y cualquiera que abra el mapa la ve—, asi que no es un secreto
-      // que se filtre aqui: es como funciona el servicio.
       'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2a7p_1_eedec528d03b71c956a28ed4',
       {
         subdomains: 'abcd',
@@ -873,7 +911,11 @@
     map.on('dragstart', function () {
 
       if (!isProgrammaticPan && selectedCallsign) {
-        closeSidebar();
+        if (followPlane) {
+          toggleFollowPlane();
+        } else {
+          closeSidebar();
+        }
       }
 
     });
@@ -1233,6 +1275,18 @@
 
       return `
 
+        <div class="flight-actions-bar">
+          <button type="button" id="btn-follow" class="flight-action-btn ${followPlane ? 'active' : ''}" onclick="toggleFollowPlane()" title="Keep the view centered on this aircraft">
+            <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            <span>Center</span>
+          </button>
+          
+          <button type="button" id="btn-lock-range" class="flight-action-btn ${lockRange ? 'active' : ''}" onclick="toggleLockRange()" title="Permanently keep the selected aircraft radio range visible">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/></svg>
+            <span>Range</span>
+          </button>
+        </div>
+
         <div class="flight-card-main">
 
           <div class="flight-card-top">
@@ -1500,6 +1554,39 @@
 
     let isProgrammaticPan = false;
 
+    let followPlane = false;
+    let lockRange = false;
+
+
+    function toggleFollowPlane() {
+      followPlane = !followPlane;
+      const btn = document.getElementById('btn-follow');
+      if (btn) btn.classList.toggle('active', followPlane);
+
+      if (followPlane && selectedCallsign && last[selectedCallsign]) {
+        isProgrammaticPan = true;
+        const latLng = [last[selectedCallsign].lat, last[selectedCallsign].lon];
+        
+        if (window.innerWidth <= 600) {
+          map.setView(latLng, map.getZoom(), { animate: true });
+          setTimeout(function() {
+            map.panBy([0, 130], { animate: true });
+          }, 50);
+        } else {
+          map.panTo(latLng, { animate: true });
+        }
+        
+        setTimeout(function () { isProgrammaticPan = false; }, 400);
+      }
+    }
+
+
+    function toggleLockRange() {
+      lockRange = !lockRange;
+      const btn = document.getElementById('btn-lock-range');
+      if (btn) btn.classList.toggle('active', lockRange);
+      paintRange();
+    }
 
 
     function selectPlane(callsign) {
@@ -1540,15 +1627,16 @@
 
       isProgrammaticPan = true;
 
-      map.panTo(
-        [
-          last[callsign].lat,
-          last[callsign].lon
-        ],
-        {
-          animate: true
-        }
-      );
+      const latLng = [last[callsign].lat, last[callsign].lon];
+      
+      if (window.innerWidth <= 600) {
+        map.setView(latLng, map.getZoom(), { animate: true });
+        setTimeout(function() {
+          map.panBy([0, 130], { animate: true });
+        }, 50);
+      } else {
+        map.panTo(latLng, { animate: true });
+      }
 
       setTimeout(
         function () {
@@ -1563,6 +1651,8 @@
     function closeSidebar() {
 
       selectedCallsign = null;
+      followPlane = false;
+      lockRange = false;
 
       document
         .getElementById('sidebar')
@@ -1656,7 +1746,6 @@
 
         })
         .catch(function () {
-          /* sin rastro se pinta la recta de siempre */
         });
 
     }
@@ -1920,6 +2009,10 @@
 
 
     function clearRings() {
+      const textEl = document.getElementById('ring-text');
+      if (textEl) {
+        textEl.remove();
+      }
 
       rings.forEach(
         function (r) {
@@ -1954,10 +2047,8 @@
       );
 
 
-      const p =
-        hovered
-          ? last[hovered]
-          : null;
+      const targetCs = (lockRange && selectedCallsign) ? selectedCallsign : hovered;
+      const p = targetCs ? last[targetCs] : null;
 
 
       if (
@@ -1994,6 +2085,7 @@
 
 
       if (
+        !lockRange &&
         radioEnPixeles(
           p.lat,
           p.lon,
@@ -2010,64 +2102,83 @@
 
       if (
         rings.length === 2 &&
-        ringsFor === hovered
+        ringsFor === targetCs
       ) {
 
-        rings.forEach(
-          function (r) {
-
-            r.setLatLng(
-              [
-                p.lat,
-                p.lon
-              ]
-            );
-
-          }
-        );
-
-        rings[0].setRadius(
-          rFade * NM_TO_M
-        );
-
-        rings[1].setRadius(
-          rClear * NM_TO_M
-        );
+        rings[0].setLatLng([p.lat, p.lon]);
+        rings[1].setLatLng([p.lat, p.lon]);
+        rings[0].setRadius(rFade * NM_TO_M);
+        rings[1].setRadius(rClear * NM_TO_M);
+        
+        const textPath = document.getElementById('ring-text-path');
+        if (textPath) {
+          textPath.textContent = Math.round(rFade) + ' NM';
+        }
 
       } else {
 
         clearRings();
 
 
+        const outerRing = L.circle(
+
+          [
+            p.lat,
+            p.lon
+          ],
+
+          {
+            radius: rFade * NM_TO_M,
+            className: 'range-ring',
+            color: '#E8A33D',
+            weight: 1,
+            opacity: .35,
+            dashArray: '4 7',
+            fill: false,
+            interactive: false
+          }
+
+        ).addTo(map);
+
+        rings.push(outerRing);
+
+        const pathEl = outerRing._path;
+        if (pathEl) {
+          pathEl.id = 'ring-path-hover';
+          
+          const svgEl = pathEl.ownerSVGElement;
+          
+          const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          textEl.id = 'ring-text';
+          textEl.setAttribute('fill', '#E8A33D');
+          textEl.setAttribute('font-family', 'var(--mono)');
+          textEl.setAttribute('font-size', '11px');
+          textEl.setAttribute('font-weight', '700');
+          textEl.setAttribute('dy', '-5');
+          textEl.style.textShadow = '0 1px 3px rgba(0,0,0,0.9)';
+          
+          const textPathEl = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+          textPathEl.id = 'ring-text-path';
+          textPathEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#ring-path-hover'); 
+          textPathEl.setAttribute('href', '#ring-path-hover');
+          textPathEl.setAttribute('startOffset', '25%');
+          textPathEl.setAttribute('text-anchor', 'middle');
+          textPathEl.textContent = Math.round(rFade) + ' NM';
+          
+          textEl.appendChild(textPathEl);
+          svgEl.appendChild(textEl);
+        }
+
+
         rings.push(
 
           L.circle(
+
             [
               p.lat,
               p.lon
             ],
-            {
-              radius: rFade * NM_TO_M,
-              className: 'range-ring',
-              color: '#E8A33D',
-              weight: 1,
-              opacity: .28,
-              dashArray: '4 7',
-              fill: false,
-              interactive: false
-            }
-          ).addTo(map)
 
-        );
-
-
-        rings.push(
-
-          L.circle(
-            [
-              p.lat,
-              p.lon
-            ],
             {
               radius: rClear * NM_TO_M,
               className: 'range-ring',
@@ -2079,12 +2190,13 @@
               fillOpacity: .03,
               interactive: false
             }
+
           ).addTo(map)
 
         );
 
 
-        ringsFor = hovered;
+        ringsFor = targetCs;
 
       }
 
@@ -2101,7 +2213,7 @@
           if (!el || !q) return;
 
 
-          if (cs === hovered) {
+          if (cs === targetCs) {
             return;
           }
 
@@ -2138,6 +2250,8 @@
 
 
     function clearRange() {
+
+      if (lockRange) return;
 
       hovered = null;
 
@@ -2254,7 +2368,7 @@
 
           cancelRange();
 
-          if (hovered) {
+          if (hovered && !lockRange) {
             clearRange();
           }
 
@@ -2440,8 +2554,7 @@
 
 
             if (
-              selectedCallsign === callsign &&
-              !isProgrammaticPan
+              selectedCallsign === callsign
             ) {
 
               document
@@ -2454,26 +2567,26 @@
                 );
 
 
-              isProgrammaticPan = true;
-
-
-              map.panTo(
-                [
-                  lat,
-                  lon
-                ],
-                {
-                  animate: true
+              if (followPlane) {
+                isProgrammaticPan = true;
+                const latLng = [lat, lon];
+                
+                if (window.innerWidth <= 600) {
+                  map.setView(latLng, map.getZoom(), { animate: true });
+                  setTimeout(function() {
+                    map.panBy([0, 130], { animate: true });
+                  }, 50);
+                } else {
+                  map.panTo(latLng, { animate: true });
                 }
-              );
 
-
-              setTimeout(
-                function () {
-                  isProgrammaticPan = false;
-                },
-                400
-              );
+                setTimeout(
+                  function () {
+                    isProgrammaticPan = false;
+                  },
+                  400
+                );
+              }
 
             }
 
@@ -2529,7 +2642,8 @@
 
 
                 if (
-                  hovered === callsign
+                  hovered === callsign &&
+                  !lockRange
                 ) {
 
                   clearRange();
@@ -2571,8 +2685,6 @@
       );
 
 
-      /* REMOVE OFFLINE PILOTS */
-
       Object.keys(markers)
         .forEach(
           function (callsign) {
@@ -2596,7 +2708,8 @@
 
 
               if (
-                hovered === callsign
+                hovered === callsign &&
+                !lockRange
               ) {
 
                 clearRange();
