@@ -297,7 +297,7 @@
   async function loadStatus(){
     var el=document.getElementById('live-counter');
     try{
-      var r=await fetch('https://ourradiofs.duckdns.org/map/data',{cache:'no-store'});
+      var r=await fetch('https://data.ourradiofs.com/map/data',{cache:'no-store'});
       if(!r.ok) throw 0;
       var d=await r.json();
       var list=Array.isArray(d)?d:(d.pilots||[]);
