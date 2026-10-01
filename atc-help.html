@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talking to ATC — OurRadioFS</title>
+<meta name="description" content="What to say to the OurRadioFS air traffic controller, step by step: a full VFR flight, a full IFR flight, and how to ask for what you forgot.">
+<meta property="og:title" content="Talking to ATC — OurRadioFS">
+<meta property="og:description" content="What to say to the controller, step by step, for VFR and IFR flights.">
+<meta property="og:type" content="article">
+<link rel="icon" href="assets/favicon.ico">
+<style>
+  :root{
+    --bg:#0D1117; --surface:#161B22; --border:#30363D;
+    --text:#C9D1D9; --title:#E6EDF3; --muted:#8B949E; --amber:#E8A33D;
+    --green:#3FB950;
+    --mono:'Consolas','SF Mono','Roboto Mono',ui-monospace,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:0 16px 80px}
+  header{padding:36px 0 8px}
+  header a.back{color:var(--muted);font-size:14px;text-decoration:none}
+  header a.back:hover{color:var(--amber)}
+  h1{color:var(--title);font-size:32px;line-height:1.2;margin:14px 0 8px}
+  h2{color:var(--title);font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--border)}
+  h3{color:var(--amber);font-size:15px;letter-spacing:.06em;text-transform:uppercase;margin:26px 0 8px}
+  p{margin:8px 0}
+  .lead{color:var(--muted);font-size:17px}
+  .tips{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin:18px 0}
+  .tips li{margin:6px 0}
+  ul{padding-left:20px}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin:12px 0}
+  .step .who{color:var(--muted);font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+  .say{font-family:var(--mono);font-size:14.5px;color:var(--green);margin:6px 0 2px}
+  .say span{color:var(--muted)}
+  .hear{color:var(--muted);font-size:14.5px;margin:2px 0 4px}
+  code{font-family:var(--mono);font-size:.92em;color:var(--green)}
+  .note{border-left:3px solid var(--amber);padding:6px 14px;margin:16px 0;color:var(--text);background:rgba(232,163,61,.06)}
+  nav.toc{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+  nav.toc a{color:var(--text);text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:5px 14px;font-size:14px;background:var(--surface)}
+  nav.toc a:hover{border-color:var(--amber);color:var(--amber)}
+  footer{margin-top:60px;color:var(--muted);font-size:14px;border-top:1px solid var(--border);padding-top:16px}
+  @media (max-width:520px){h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="back" href="index.html">&larr; OurRadioFS</a>
+  <h1>Talking to ATC</h1>
+  <p class="lead">What to say to the controller, step by step. Two separate flights: VFR and IFR. Everything is in English, the way real radio is done.</p>
+  <nav class="toc">
+    <a href="#basics">The basics</a>
+    <a href="#atis">ATIS</a>
+    <a href="#vfr">VFR flight</a>
+    <a href="#ifr">IFR flight</a>
+    <a href="#ask">Forgot something?</a>
+    <a href="#trouble">If it doesn't understand</a>
+  </nav>
+</header>
+
+<h2 id="basics">The basics</h2>
+<div class="tips">
+<ul>
+  <li><b>Hold the ATC push-to-talk key</b>, say your request, release. Tune the radio to the frequency of the station you are talking to.</li>
+  <li><b>No rigid phrases.</b> Say it the way you would say it on the radio. Short and clear beats long and perfect.</li>
+  <li><b>Say "VFR" or "visual flight"</b>, whichever you prefer.</li>
+  <li><b>Not sure what to say? Say "help".</b> The controller suggests what to say at that exact moment.</li>
+  <li>Airports are found worldwide. To name a destination, spell its ICAO code: "lima india romeo mike".</li>
+</ul>
+</div>
+
+<h2 id="atis">ATIS</h2>
+<p>A recording, not a controller. Tune the field's real ATIS frequency and it plays on its own &mdash; you don't have to ask for it.</p>
+<div class="step">
+  <div class="hear">"[Field] information [letter], runway [X] in use, wind [N] degrees [N] knots, visibility [N], QNH [N], expect the [approach], advise on initial contact you have information [letter]."</div>
+</div>
+<div class="tips">
+<ul>
+  <li><b>It repeats on its own</b>, roughly every 45 seconds. The letter only moves on when something real changes &mdash; wind, runway, QNH &mdash; never just because time passed.</li>
+  <li><b>It's a recording: it doesn't listen.</b> Nothing you say on that frequency gets a reply, not even "ATIS" &mdash; wait for it to come around again, same as the real thing.</li>
+  <li><b>Note the letter.</b> When you request your IFR clearance, say "with information [letter]" (or "information [letter] on board"): if it's current, the controller just confirms it instead of repeating the weather. Get it wrong and it corrects you and still reads you the weather.</li>
+</ul>
+</div>
+
+<h2 id="vfr">A VFR flight</h2>
+<p>No flight plan needed. VFR and IFR are never mixed: a VFR pilot never gets IFR instructions.</p>
+
+<h3>On the ground</h3>
+<div class="step">
+  <div class="say">"Request departure information" <span>&mdash; or "request VFR"</span></div>
+  <div class="hear">You get the runway in use, wind and QNH. "Request VFR" also gives you squawk 7000.</div>
+</div>
+<div class="step">
+  <div class="say">"Request taxi VFR to <span>[your destination]</span>"</div>
+  <div class="hear">Taxi instructions to the holding point.</div>
+</div>
+<div class="step">
+  <div class="say">"Holding point" <span>&mdash; or "ready for departure"</span></div>
+  <div class="hear">Take-off clearance, with the wind. The tower may ask you to report leaving the circuit.</div>
+</div>
+
+<h3>Leaving</h3>
+<div class="step">
+  <div class="say">"Leaving the control zone" <span>&mdash; or "leaving the circuit", "leaving the zone"</span></div>
+  <div class="hear">Frequency change approved, or a handoff to Approach if the airport has one.</div>
+</div>
+<div class="step">
+  <div class="say">"Request flight following"</div>
+  <div class="hear">Radar service once you are in the air, with your squawk. End it with "leaving your frequency".</div>
+</div>
+<div class="step">
+  <div class="say">"Request zone transit"</div>
+  <div class="hear">To cross a control zone without landing there.</div>
+</div>
+
+<h3>Circuits</h3>
+<div class="step">
+  <div class="say">"Request circuits" <span>&mdash; "request touch and go", "request low approach", "request overhead join"</span></div>
+  <div class="hear">Runway, wind and QNH, then report downwind, base and final. Say "downwind", "base", "final" as you fly them.</div>
+</div>
+
+<h3>Arriving</h3>
+<div class="step">
+  <div class="say">"Inbound for landing" <span>&mdash; add your position and altitude if you like</span></div>
+  <div class="hear">Runway in use, wind, QNH and how to join. The tower decides whether you enter straight in or join the circuit.</div>
+</div>
+<div class="step">
+  <div class="say">"Field in sight" &rarr; "final"</div>
+  <div class="hear">Cleared to land, with the wind.</div>
+</div>
+<div class="step">
+  <div class="say">"Runway vacated" &rarr; "request taxi"</div>
+  <div class="hear">Contact Ground, then taxi to the apron.</div>
+</div>
+
+<div class="note"><b>Local flight?</b> Take off, fly around and come back to the same airfield: leave the zone as above and, when you return, call again with "inbound for landing" (or "returning to the field"). Real controllers work the same way: you change frequency on leaving and call again on returning.</div>
+<div class="note"><b>Airfields without a tower</b> have an information service (AFIS) or a traffic frequency. They inform you, they don't clear you: you decide when to take off and land.</div>
+
+<h2 id="ifr">An IFR flight</h2>
+<p>With a flight plan (SimBrief works). The controller gives you the departure procedure, altitudes and handoffs; you read them back.</p>
+<div class="note"><b>Microsoft Flight Simulator 2020:</b> IFR clearance is not available on this simulator version &mdash; you'll hear "VFR service only" if you request one. Full IFR support requires Microsoft Flight Simulator 2024.</div>
+
+<h3>Clearance and start</h3>
+<div class="step">
+  <div class="who">Delivery</div>
+  <div class="say">"Request clearance" <span>&mdash; or "ready to copy"; add "with information [letter]" if you already copied the ATIS</span></div>
+  <div class="hear">You receive your route, departure procedure, runway, initial altitude and squawk. If you stated the current ATIS letter, the weather is skipped &mdash; you're just told it's correct. <b>Read it back</b>; when it is correct you are handed to Ground.</div>
+</div>
+<div class="step">
+  <div class="who">Ground</div>
+  <div class="say">"Request start up" &rarr; "request pushback" &rarr; "request taxi"</div>
+  <div class="hear">Taxi to the holding point; the handoff to the tower comes with the taxi instruction. Flying something bigger than light GA with your engines still off? Just say "request pushback" &mdash; you'll get "push and start-up approved" together, no need to ask twice.</div>
+</div>
+
+<h3>Departure</h3>
+<div class="step">
+  <div class="who">Tower</div>
+  <div class="say">"Holding point" <span>&mdash; or "ready for departure"</span></div>
+  <div class="hear">Take-off clearance. Read back the runway.</div>
+</div>
+<div class="step">
+  <div class="who">Departure / Approach</div>
+  <div class="say">"With you" <span>&mdash; or just report your level, "passing two thousand climbing six thousand": that checks you in too, no "with you" required</span></div>
+  <div class="hear">Radar contact and your climb.</div>
+</div>
+
+<h3>En route</h3>
+<div class="step">
+  <div class="say">"Request climb" &nbsp;/&nbsp; "request descent" &nbsp;/&nbsp; "passing flight level one zero zero"</div>
+  <div class="hear">The controller assigns levels and hands you to the next sector. You read levels back.</div>
+</div>
+<div class="step">
+  <div class="say">"Unable" <span>&mdash; when you cannot comply</span></div>
+</div>
+
+<h3>Arrival</h3>
+<div class="step">
+  <div class="say">"Field in sight" <span>&mdash; when you see the runway</span></div>
+  <div class="hear">The controller can clear you for a visual approach.</div>
+</div>
+<div class="step">
+  <div class="say">"Established" <span>&mdash; on the localizer</span></div>
+  <div class="hear">Contact the tower, then "cleared to land".</div>
+</div>
+<div class="step">
+  <div class="say">"Going around"</div>
+  <div class="hear">The controller gives you the missed approach.</div>
+</div>
+<div class="step">
+  <div class="say">"Runway vacated" &rarr; "request taxi to the stand"</div>
+</div>
+
+<div class="note"><b>Already airborne with no clearance?</b> Say "request IFR" (or "request flight following"). You get a squawk and radar service, and with a SimBrief plan the controller sends you to your next route point.</div>
+
+<h2 id="ask">Forgot something? Just ask</h2>
+<p>No need to say "say again". Ask for exactly what you forgot:</p>
+<ul>
+  <li>"What is my squawk"</li>
+  <li>"What is the QNH"</li>
+  <li>"Which runway"</li>
+  <li>"What is my departure" &nbsp;(IFR)</li>
+  <li>"What is my clearance" &nbsp;/&nbsp; "what is my level"</li>
+  <li>"What is the wind"</li>
+</ul>
+
+<h3>In trouble</h3>
+<ul>
+  <li>"Mayday, mayday, mayday" or "pan-pan, pan-pan, pan-pan" &mdash; the controller takes priority.</li>
+  <li>"Minimum fuel" / "declaring minimum fuel"</li>
+</ul>
+
+<footer>OurRadioFS &mdash; the community VHF radio for MSFS and X-Plane.</footer>
+</div>
+</body>
+</html>
