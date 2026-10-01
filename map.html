@@ -565,6 +565,45 @@
       line-height: 1;
     }
 
+    .flight-sim-badge {
+      font-family: var(--sans);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .flight-bottom-info {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 2px;
+      min-width: 0;
+    }
+
+    .flight-bottom-sim {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .flight-bottom-pos {
+      flex: none;
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .flight-bottom-pos b {
+      color: var(--text);
+      font-weight: 600;
+    }
+
     .flight-phase {
       display: flex;
       align-items: center;
@@ -696,10 +735,12 @@
       background: var(--surface-card);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 10px 12px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .comms-title {
@@ -712,18 +753,23 @@
 
     .comms-row-wrapper {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      align-items: stretch;
       gap: 6px;
+      width: 100%;
     }
 
     .comm-channel {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       background: rgba(0, 0, 0, 0.2);
       border: 1px solid var(--border-subtle);
-      padding: 6px 10px;
+      padding: 5px 8px;
       border-radius: 6px;
+      flex: 1 1 0;
+      min-width: 0;
     }
 
     .comm-label-badge {
@@ -749,13 +795,7 @@
     }
 
     .flight-card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 2px;
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--muted);
+      display: none;
     }
 
     @media (max-width: 600px) {
@@ -767,6 +807,14 @@
         width: auto;
         border-radius: 10px;
         transform: translateY(110%);
+      }
+
+      .flight-comms-card {
+        max-width: 100%;
+      }
+
+      .flight-bottom-info {
+        gap: 6px;
       }
 
       #sidebar.open {
@@ -834,9 +882,6 @@
       layers: [cartoDark]
     }).setView([46.5, 8.0], 5);
 
-
-    /* RANGE HINT */
-
     (function () {
 
       const RangeHint = L.Control.extend({
@@ -875,9 +920,6 @@
 
     })();
 
-
-    /* LABELS */
-
     const LABEL_ZOOM = 7;
 
     function updateLabelVisibility() {
@@ -893,7 +935,6 @@
 
     updateLabelVisibility();
 
-
     const sidebarEl = document.getElementById('sidebar');
 
     L.DomEvent.disableClickPropagation(sidebarEl);
@@ -907,26 +948,15 @@
 
     });
 
-
-    map.on('dragstart', function () {
-
-      if (!isProgrammaticPan && selectedCallsign) {
-        if (followPlane) {
-          toggleFollowPlane();
-        } else {
-          closeSidebar();
-        }
-      }
-
-    });
-
-
+    // ARRASTRAR EL MAPA YA NO QUITA EL SEGUIMIENTO (1-oct): antes, empezar a arrastrar
+    // apagaba followPlane (o cerraba la barra lateral) igual que un clic. Ahora solo un
+    // clic de verdad lo hace (ver map.on('click', ...)) - arrastrar es libre, y si el
+    // seguimiento sigue encendido la camara vuelve al avion en la siguiente posicion.
 
     const PLANE_ICON =
       '<svg viewBox="0 0 24 24" fill="currentColor">' +
         '<path d="M12 2c-.6 0-1 .9-1 2v5.2L3 14v2l8-2.3V19l-2 1.2V22l3-.9 3 .9v-1.8L13 19v-5.3l8 2.3v-2l-8-4.8V4c0-1.1-.4-2-1-2z"/>' +
       '</svg>';
-
 
     function planeIcon(callsign, heading) {
 
@@ -955,8 +985,6 @@
 
     }
 
-
-
     const PHASE_NEAR_KM = 9;
     const PHASE_STOPPED_KTS = 5;
     const PHASE_TAXI_KTS = 40;
@@ -984,8 +1012,6 @@
     const phaseNow = {};
     const phaseTry = {};
 
-
-
     function hasFullPlan(p) {
 
       return /^[A-Z]{4}$/.test(p.dep) &&
@@ -994,7 +1020,6 @@
         p.destLat != null;
 
     }
-
 
     function rawPhase(p, was) {
 
@@ -1057,7 +1082,6 @@
 
     }
 
-
     function flightPhase(p) {
 
       const cs = p.callsign;
@@ -1092,7 +1116,6 @@
 
     }
 
-
     function generateFlightInfoHtml(pilot) {
 
       const aircraft =
@@ -1102,6 +1125,15 @@
 
       const aircraftBadge = aircraft
         ? `<div class="flight-aircraft-badge" title="${esc(aircraft)}">${esc(aircraft)}</div>`
+        : '';
+
+      const sim =
+        typeof pilot.sim === 'string'
+          ? pilot.sim.trim()
+          : '';
+
+      const simBadge = sim
+        ? `<div class="flight-sim-badge">${esc(sim)}</div>`
         : '';
 
       const altitude =
@@ -1149,7 +1181,6 @@
           `<span class="phase-dot"></span>` +
           `${esc(PHASE_NAMES[phase][0])}</div>`
         : '';
-
 
       let routeSection = '';
 
@@ -1257,7 +1288,6 @@
 
       }
 
-
       const hasCom2 =
         pilot.freq2 != null &&
         pilot.freq2 > 0;
@@ -1272,7 +1302,6 @@
           ? ' inactive'
           : '';
 
-
       return `
 
         <div class="flight-actions-bar">
@@ -1280,7 +1309,7 @@
             <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
             <span>Center</span>
           </button>
-          
+
           <button type="button" id="btn-lock-range" class="flight-action-btn ${lockRange ? 'active' : ''}" onclick="toggleLockRange()" title="Permanently keep the selected aircraft radio range visible">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/></svg>
             <span>Range</span>
@@ -1299,12 +1328,13 @@
 
           </div>
 
+          ${simBadge}
+
           ${phaseSection}
 
           ${routeSection}
 
         </div>
-
 
         <div class="flight-metrics-grid">
 
@@ -1330,7 +1360,6 @@
 
         </div>
 
-
         <div class="flight-comms-card">
 
           <span class="comms-title">
@@ -1350,7 +1379,6 @@
               </span>
 
             </div>
-
 
             ${
               hasCom2
@@ -1374,33 +1402,29 @@
 
         </div>
 
+        <div class="flight-bottom-info">
 
-        ${
-          pilot.lat != null &&
-          pilot.lon != null
+          <div class="flight-bottom-sim">
+            ${simBadge || ''}
+          </div>
 
-            ? `
-              <div class="flight-card-footer">
+          ${
+            pilot.lat != null &&
+            pilot.lon != null
+              ? `
+                <div class="flight-bottom-pos">
+                  <span>POS</span>
+                  <b>${fmtLat(pilot.lat)}&nbsp;&nbsp;${fmtLon(pilot.lon)}</b>
+                </div>
+              `
+              : ''
+          }
 
-                <span>POS</span>
-
-                <span>
-                  ${fmtLat(pilot.lat)}
-                  &nbsp;
-                  ${fmtLon(pilot.lon)}
-                </span>
-
-              </div>
-            `
-
-            : ''
-        }
+        </div>
 
       `;
 
     }
-
-
 
     function haversineKm(
       lat1,
@@ -1435,7 +1459,6 @@
 
     }
 
-
     function esc(value) {
 
       return (
@@ -1461,7 +1484,6 @@
 
     }
 
-
     function fmtFreq(frequency) {
 
       return (
@@ -1475,7 +1497,6 @@
 
     }
 
-
     function fmtAlt(altitude) {
 
       return Math.round(
@@ -1483,7 +1504,6 @@
       ).toLocaleString('en-US');
 
     }
-
 
     function fmtLat(v) {
 
@@ -1505,7 +1525,6 @@
 
     }
 
-
     function fmtLon(v) {
 
       var p =
@@ -1525,8 +1544,6 @@
       '°';
 
     }
-
-
 
     const markers = {};
 
@@ -1557,29 +1574,18 @@
     let followPlane = false;
     let lockRange = false;
 
-
     function toggleFollowPlane() {
       followPlane = !followPlane;
       const btn = document.getElementById('btn-follow');
       if (btn) btn.classList.toggle('active', followPlane);
 
       if (followPlane && selectedCallsign && last[selectedCallsign]) {
-        isProgrammaticPan = true;
-        const latLng = [last[selectedCallsign].lat, last[selectedCallsign].lon];
-        
-        if (window.innerWidth <= 600) {
-          map.setView(latLng, map.getZoom(), { animate: true });
-          setTimeout(function() {
-            map.panBy([0, 130], { animate: true });
-          }, 50);
-        } else {
-          map.panTo(latLng, { animate: true });
-        }
-        
-        setTimeout(function () { isProgrammaticPan = false; }, 400);
+        followCamera(
+          last[selectedCallsign].lat,
+          last[selectedCallsign].lon
+        );
       }
     }
-
 
     function toggleLockRange() {
       lockRange = !lockRange;
@@ -1587,7 +1593,6 @@
       if (btn) btn.classList.toggle('active', lockRange);
       paintRange();
     }
-
 
     function selectPlane(callsign) {
 
@@ -1604,7 +1609,6 @@
         .getElementById('sidebar')
         .classList.add('open');
 
-
       Object.keys(markers).forEach(function (cs) {
 
         const el =
@@ -1619,34 +1623,16 @@
 
       });
 
-
       paintRange();
 
       refreshRoute();
 
-
-      isProgrammaticPan = true;
-
-      const latLng = [last[callsign].lat, last[callsign].lon];
-      
-      if (window.innerWidth <= 600) {
-        map.setView(latLng, map.getZoom(), { animate: true });
-        setTimeout(function() {
-          map.panBy([0, 130], { animate: true });
-        }, 50);
-      } else {
-        map.panTo(latLng, { animate: true });
-      }
-
-      setTimeout(
-        function () {
-          isProgrammaticPan = false;
-        },
-        400
+      followCamera(
+        last[callsign].lat,
+        last[callsign].lon
       );
 
     }
-
 
     function closeSidebar() {
 
@@ -1657,8 +1643,6 @@
       document
         .getElementById('sidebar')
         .classList.remove('open');
-
-
 
       Object.keys(markers).forEach(function (cs) {
 
@@ -1671,14 +1655,11 @@
 
       });
 
-
       paintRange();
 
       refreshRoute();
 
     }
-
-
 
     function clearRoute() {
 
@@ -1696,11 +1677,9 @@
 
     }
 
-
     const tracks = {};
     const tracksAt = {};
     const TRACK_REFRESH_MS = 10000;
-
 
     function trackUrl(callsign) {
 
@@ -1710,7 +1689,6 @@
       ) + encodeURIComponent(callsign);
 
     }
-
 
     function fetchTrack(callsign) {
 
@@ -1750,14 +1728,12 @@
 
     }
 
-
     const ICONO_SALIDA =
       '<svg viewBox="0 0 16 16">' +
       '<path d="M2 14h12"/>' +
       '<path d="M3.5 10.5 12 4"/>' +
       '<path d="M12 4 8.6 4.4M12 4 11.6 7.4"/>' +
       '</svg>';
-
 
     const ICONO_LLEGADA =
       '<svg viewBox="0 0 16 16">' +
@@ -1766,7 +1742,6 @@
       '<path d="M12 10.5 8.6 10.1M12 10.5 11.6 7.1"/>' +
       '</svg>';
 
-
     function icaoValido(v) {
 
       return /^[A-Z]{4}$/.test(v || '')
@@ -1774,7 +1749,6 @@
         : null;
 
     }
-
 
     function airportMarker(lat, lon, icao, tipo) {
 
@@ -1799,19 +1773,23 @@
 
     }
 
-
     function paintRoute(callsign) {
+
+      // DURANTE EL ZOOM NO SE TOCA (1-oct): repintar el rastro a mitad del gesto de
+      // zoom de Leaflet (clearRoute + anadir capas nuevas, o incluso solo moverle los
+      // puntos a una ya existente) chocaba con su propia animacion y el trazo saltaba
+      // raro un instante. Se deja tal cual hasta que termine (ver zoomend, que repinta
+      // al momento para no perder ninguna actualizacion que haya llegado mientras tanto).
+      if (mapZooming) {
+        return;
+      }
 
       const p =
         callsign
           ? last[callsign]
           : null;
 
-      if (
-        !p ||
-        p.depLat == null ||
-        p.destLat == null
-      ) {
+      if (!p) {
 
         clearRoute();
 
@@ -1819,8 +1797,14 @@
 
       }
 
-
+      // VFR / SIN PLAN: no hay depLat ni destLat, pero el avión sigue mereciendo su
+      // rastro (30-sep) — antes esta función exigía los dos y un VFR nunca pintaba
+      // nada, aunque llevara volando una hora. Sin salida conocida, el rastro empieza
+      // en la posición actual (no hay "desde dónde" que inventar); sin destino,
+      // sencillamente no hay línea de puntos ni marcador de llegada — el resto de la
+      // función ya lo contempla (haciaDestino queda vacío, el marcador se salta).
       const volado =
+        p.depLat != null &&
         haversineKm(
           p.depLat,
           p.depLon,
@@ -1828,12 +1812,10 @@
           p.lon
         ) >= 5;
 
-
       const desde =
         volado
           ? [p.depLat, p.depLon]
           : [p.lat, p.lon];
-
 
       fetchTrack(callsign);
 
@@ -1844,11 +1826,9 @@
           ? rastro.concat([[p.lat, p.lon]])
           : [desde, [p.lat, p.lon]];
 
-
       const icaoDep = icaoValido(p.dep);
 
       const icaoDest = icaoValido(p.dest);
-
 
       const haciaDestino =
         p.destLat != null
@@ -1858,11 +1838,9 @@
             ]
           : [];
 
-
       const extremos =
         (volado ? '^' : '_') +
         (icaoDep || '') + '>' + (icaoDest || '');
-
 
       if (
         routeFor === callsign &&
@@ -1877,9 +1855,7 @@
 
       }
 
-
       clearRoute();
-
 
       routeLines.push(
 
@@ -1894,7 +1870,6 @@
         ).addTo(map)
 
       );
-
 
       routeLines.push(
 
@@ -1911,7 +1886,6 @@
 
       );
 
-
       if (icaoDep && volado) {
 
         routeLines.push(
@@ -1924,7 +1898,6 @@
         );
 
       }
-
 
       if (icaoDest && p.destLat != null) {
 
@@ -1939,21 +1912,17 @@
 
       }
 
-
       routeFor = callsign;
 
       routeEnds = extremos;
 
     }
 
-
-
     const NM_TO_M = 1852;
 
     const GROUND_FT = 10;
 
     const RANGE_HOVER_MS = 1000;
-
 
     function rangeNm(aFt, bFt) {
 
@@ -1970,7 +1939,6 @@
       );
 
     }
-
 
     function radioEnPixeles(
       lat,
@@ -2007,7 +1975,6 @@
 
     }
 
-
     function clearRings() {
       const textEl = document.getElementById('ring-text');
       if (textEl) {
@@ -2025,7 +1992,6 @@
       ringsFor = null;
 
     }
-
 
     function paintRange() {
 
@@ -2046,10 +2012,8 @@
         }
       );
 
-
       const targetCs = (lockRange && selectedCallsign) ? selectedCallsign : hovered;
       const p = targetCs ? last[targetCs] : null;
-
 
       if (
         !p ||
@@ -2062,7 +2026,6 @@
 
       }
 
-
       const rFade =
         rangeNm(
           p.alt,
@@ -2072,17 +2035,14 @@
       const rClear =
         rFade * 0.75;
 
-
       const size =
         map.getSize();
-
 
       const limite =
         Math.sqrt(
           size.x * size.x +
           size.y * size.y
         ) / 4;
-
 
       if (
         !lockRange &&
@@ -2099,7 +2059,6 @@
 
       }
 
-
       if (
         rings.length === 2 &&
         ringsFor === targetCs
@@ -2109,7 +2068,7 @@
         rings[1].setLatLng([p.lat, p.lon]);
         rings[0].setRadius(rFade * NM_TO_M);
         rings[1].setRadius(rClear * NM_TO_M);
-        
+
         const textPath = document.getElementById('ring-text-path');
         if (textPath) {
           textPath.textContent = Math.round(rFade) + ' NM';
@@ -2118,7 +2077,6 @@
       } else {
 
         clearRings();
-
 
         const outerRing = L.circle(
 
@@ -2145,9 +2103,9 @@
         const pathEl = outerRing._path;
         if (pathEl) {
           pathEl.id = 'ring-path-hover';
-          
+
           const svgEl = pathEl.ownerSVGElement;
-          
+
           const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           textEl.id = 'ring-text';
           textEl.setAttribute('fill', '#E8A33D');
@@ -2156,19 +2114,18 @@
           textEl.setAttribute('font-weight', '700');
           textEl.setAttribute('dy', '-5');
           textEl.style.textShadow = '0 1px 3px rgba(0,0,0,0.9)';
-          
+
           const textPathEl = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
           textPathEl.id = 'ring-text-path';
-          textPathEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#ring-path-hover'); 
+          textPathEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#ring-path-hover');
           textPathEl.setAttribute('href', '#ring-path-hover');
           textPathEl.setAttribute('startOffset', '25%');
           textPathEl.setAttribute('text-anchor', 'middle');
           textPathEl.textContent = Math.round(rFade) + ' NM';
-          
+
           textEl.appendChild(textPathEl);
           svgEl.appendChild(textEl);
         }
-
 
         rings.push(
 
@@ -2195,11 +2152,9 @@
 
         );
 
-
         ringsFor = targetCs;
 
       }
-
 
       Object.keys(markers).forEach(
         function (cs) {
@@ -2212,11 +2167,9 @@
 
           if (!el || !q) return;
 
-
           if (cs === targetCs) {
             return;
           }
-
 
           if (
             map.distance(
@@ -2248,7 +2201,6 @@
 
     }
 
-
     function clearRange() {
 
       if (lockRange) return;
@@ -2260,7 +2212,6 @@
       refreshRoute();
 
     }
-
 
     function refreshRoute() {
 
@@ -2275,9 +2226,6 @@
       }
 
     }
-
-
-    /* HOVER RANGE */
 
     function armRange(callsign) {
 
@@ -2294,9 +2242,7 @@
 
       }
 
-
       pending = callsign;
-
 
       hoverTimer =
         setTimeout(
@@ -2305,7 +2251,6 @@
             hoverTimer = null;
 
             pending = null;
-
 
             if (!isProgrammaticPan) {
 
@@ -2323,7 +2268,6 @@
 
     }
 
-
     function cancelRange() {
 
       if (hoverTimer) {
@@ -2340,9 +2284,7 @@
 
     }
 
-
     let punteroXY = null;
-
 
     map.getContainer()
       .addEventListener(
@@ -2357,7 +2299,6 @@
 
         }
       );
-
 
     map.getContainer()
       .addEventListener(
@@ -2375,7 +2316,6 @@
         }
       );
 
-
     function avionBajoElPuntero() {
 
       if (
@@ -2385,13 +2325,11 @@
         return null;
       }
 
-
       const el =
         document.elementFromPoint(
           punteroXY[0],
           punteroXY[1]
         );
-
 
       const icono =
         el &&
@@ -2399,11 +2337,9 @@
           ? el.closest('.plane-marker')
           : null;
 
-
       if (!icono) {
         return null;
       }
-
 
       return Object.keys(markers)
         .find(
@@ -2418,7 +2354,6 @@
         ) || null;
 
     }
-
 
     map.on(
       'zoomend',
@@ -2444,14 +2379,71 @@
       }
     );
 
-
     map.on(
       'resize',
       paintRange
     );
 
+    const lastTarget = {};
+    const MOVE_EPS_KM = 0.01;
 
-    /* RENDER */
+    let mapZooming = false;
+
+    map.on('zoomstart', function () {
+      mapZooming = true;
+    });
+
+    map.on('zoomend', function () {
+      mapZooming = false;
+      refreshRoute();
+    });
+
+    function haversineKm(lat1, lon1, lat2, lon2) {
+
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    }
+
+    function followCamera(lat, lon) {
+
+      if (mapZooming) {
+        return;
+      }
+
+      let target = L.latLng(lat, lon);
+
+      if (window.innerWidth <= 600) {
+
+        const z = map.getZoom();
+
+        const pt =
+          map.project(target, z)
+            .add(L.point(0, 130));
+
+        target = map.unproject(pt, z);
+
+      }
+
+      isProgrammaticPan = true;
+
+      map.setView(
+        target,
+        map.getZoom(),
+        { animate: false }
+      );
+
+      isProgrammaticPan = false;
+
+    }
 
     function render(
       pilots,
@@ -2459,7 +2451,6 @@
     ) {
 
       const seen = {};
-
 
       pilots.forEach(
         function (pilot) {
@@ -2474,7 +2465,6 @@
 
           }
 
-
           const callsign =
             pilot.callsign;
 
@@ -2483,7 +2473,6 @@
 
           const lon =
             Number(pilot.lon);
-
 
           if (
             !isFinite(lat) ||
@@ -2499,7 +2488,6 @@
 
           }
 
-
           seen[callsign] = true;
 
           const marker =
@@ -2508,40 +2496,25 @@
           last[callsign] =
             pilot;
 
-
           if (hasFullPlan(pilot)) {
             flightPhase(pilot);
           }
 
-
           if (marker) {
 
-            marker.setLatLng(
-              [
-                lat,
-                lon
-              ]
-            );
+            const newHeading =
+              Number(pilot.heading) || 0;
 
-
-            const el =
+            const el0 =
               marker.getElement();
 
-            const plane =
-              el &&
-              el.querySelector(
+            const plane0 =
+              el0 &&
+              el0.querySelector(
                 '.plane'
               );
 
-
-            if (plane) {
-
-              plane.style.transform =
-                'rotate(' +
-                (Number(pilot.heading) || 0) +
-                'deg)';
-
-            } else {
+            if (!plane0) {
 
               marker.setIcon(
                 planeIcon(
@@ -2552,6 +2525,59 @@
 
             }
 
+            const prevTarget =
+              lastTarget[callsign];
+
+            const targetMovedKm =
+              prevTarget
+                ? haversineKm(
+                    prevTarget.lat,
+                    prevTarget.lon,
+                    lat,
+                    lon
+                  )
+                : Infinity;
+
+            if (targetMovedKm > MOVE_EPS_KM) {
+
+              // SIN SUAVIZADO (1-oct): antes, un salto pequeno interpolaba la posicion
+              // durante un rato en vez de ir directo al dato real. Ahora el marcador
+              // siempre salta a la posicion que acaba de llegar, sea cual sea la distancia.
+              marker.setLatLng(
+                [
+                  lat,
+                  lon
+                ]
+              );
+
+              const el =
+                marker.getElement();
+
+              const plane =
+                el &&
+                el.querySelector(
+                  '.plane'
+                );
+
+              if (plane) {
+
+                plane.style.transform =
+                  'rotate(' +
+                  newHeading +
+                  'deg)';
+
+              }
+
+              if (
+                followPlane &&
+                selectedCallsign === callsign
+              ) {
+                followCamera(lat, lon);
+              }
+
+              lastTarget[callsign] = { lat: lat, lon: lon };
+
+            }
 
             if (
               selectedCallsign === callsign
@@ -2565,28 +2591,6 @@
                 generateFlightInfoHtml(
                   pilot
                 );
-
-
-              if (followPlane) {
-                isProgrammaticPan = true;
-                const latLng = [lat, lon];
-                
-                if (window.innerWidth <= 600) {
-                  map.setView(latLng, map.getZoom(), { animate: true });
-                  setTimeout(function() {
-                    map.panBy([0, 130], { animate: true });
-                  }, 50);
-                } else {
-                  map.panTo(latLng, { animate: true });
-                }
-
-                setTimeout(
-                  function () {
-                    isProgrammaticPan = false;
-                  },
-                  400
-                );
-              }
 
             }
 
@@ -2607,7 +2611,6 @@
                 }
               ).addTo(map);
 
-
             m.on(
               'click',
               function () {
@@ -2617,7 +2620,6 @@
               }
             );
 
-
             m.on(
               'mouseover',
               function () {
@@ -2626,7 +2628,6 @@
                 );
               }
             );
-
 
             m.on(
               'mouseout',
@@ -2640,7 +2641,6 @@
 
                 }
 
-
                 if (
                   hovered === callsign &&
                   !lockRange
@@ -2653,17 +2653,17 @@
               }
             );
 
-
             markers[callsign] =
               m;
 
-          }
+            lastTarget[callsign] =
+              { lat: lat, lon: lon };
 
+          }
 
           const mel =
             markers[callsign] &&
             markers[callsign].getElement();
-
 
           if (mel) {
 
@@ -2671,8 +2671,6 @@
               'talking',
               pilot.talking === true
             );
-
-
 
             mel.classList.toggle(
               'sel',
@@ -2683,7 +2681,6 @@
 
         }
       );
-
 
       Object.keys(markers)
         .forEach(
@@ -2699,13 +2696,13 @@
 
               delete last[callsign];
 
+              delete lastTarget[callsign];
+
               delete phaseNow[callsign];
 
               delete phaseTry[callsign];
 
-
               cancelRange();
-
 
               if (
                 hovered === callsign &&
@@ -2715,7 +2712,6 @@
                 clearRange();
 
               }
-
 
               if (
                 selectedCallsign ===
@@ -2731,7 +2727,6 @@
           }
         );
 
-
       if (
         hovered ||
         selectedCallsign
@@ -2741,18 +2736,14 @@
 
       }
 
-
       updateCount(
         Object.keys(seen).length,
         online
       );
 
-
       refreshRoute();
 
     }
-
-
 
     function updateCount(
       onMap,
@@ -2763,7 +2754,6 @@
         document.getElementById(
           'online'
         );
-
 
       const total =
         (
@@ -2779,7 +2769,6 @@
 
           : onMap;
 
-
       if (total < 1) {
 
         box.hidden = true;
@@ -2787,7 +2776,6 @@
         return;
 
       }
-
 
       document
         .getElementById(
@@ -2814,11 +2802,9 @@
             onMap +
             '</span> on map';
 
-
       box.hidden = false;
 
     }
-
 
     const MAP_DATA =
       (
@@ -2829,7 +2815,6 @@
         ? 'http://localhost:8787/map/data'
 
         : 'https://data.ourradiofs.com/map/data';
-
 
     async function load() {
 
@@ -2843,7 +2828,6 @@
             }
           );
 
-
         if (!response.ok) {
 
           throw new Error(
@@ -2853,10 +2837,8 @@
 
         }
 
-
         const data =
           await response.json();
-
 
         const pilots =
           Array.isArray(data)
@@ -2871,7 +2853,6 @@
 
               : [];
 
-
         render(
           pilots,
           (
@@ -2882,7 +2863,6 @@
             ? data.online
             : undefined
         );
-
 
       } catch (error) {
 
@@ -2896,7 +2876,6 @@
       }
 
     }
-
 
     load();
 
